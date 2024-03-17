@@ -3,7 +3,7 @@
 #include <fstream>
 #include <deque>
 using namespace std;
-
+//kslna  nkaml tom isA
 
 const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
