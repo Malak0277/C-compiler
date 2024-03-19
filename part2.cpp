@@ -2,7 +2,10 @@
 #include <string>
 #include <fstream>
 #include <deque>
+#include <string>
 using namespace std;
+// assuming ^ indicates eof 
+
 enum TokenType {
     IDENTIFIER,
     NUMBER,
@@ -13,44 +16,49 @@ enum TokenType {
 const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 char token[100];
-string Symboltable[][3]; //Symbol table is a two dimensional array to store
-const int ARRAY_SIZE = 1000;
-Data dataArray[ARRAY_SIZE];
-
-#include <string>
+//string Symboltable[][3]; //Symbol table is a two dimensional array to store
 
 struct Data {
     std::string tokenn;
     TokenType Type;
     };
-char* readFromFile(const string& program, char buffer[]) {
 
+const int ARRAY_SIZE = 1000;
+Data dataArray[ARRAY_SIZE];
 
+void readFromFile(const string& program, char buffer[]) {
+    static int loc = 0;
 
-    ifstream inputFile(program, ios::binary);
+    ifstream file(program, ios::binary);
 
     // Check if the opening was successful
-    if (!inputFile.is_open()) {
+    if (!file.is_open()) {
         cerr << "Error opening file" << endl;
-        return nullptr;
     }
 
-    inputFile.read(buffer, BUF_SIZE);
 
-    // Check if the read was successful
-    if (!inputFile) {
-        cerr << "Error reading from file: " << program << endl;
-        return nullptr;
+    file.seekg(loc);
+    file.read(buffer, BUF_SIZE-1);
+
+
+    
+    // Determine the number of characters read
+    streamsize bytesRead = file.gcount();
+
+    // update the location in the file
+    loc += bytesRead;
+
+    if (file.eof()) {
+        buffer[bytesRead] = '^';
     }
 
-    inputFile.close();
+    buffer[BUF_SIZE-1] = '^';
 
-    char* forward;
-    forward = buffer;
-    return forward;
+    file.close();
 
 }
 
+/*
 void fff(){
     char *forward=buffer1, *start=buffer1;
     start=forward=readFromFile("program.txt", buffer1);
@@ -89,6 +97,8 @@ void fff(){
 
 }
 
+*/
+/*
 void Token_Type(const std::string& token)
 { 
   static int Entry=0;
@@ -111,5 +121,13 @@ void Token_Type(const std::string& token)
     throw std::runtime_error("Invalid token: " + token);
 }
 
+*/
 
 
+int main(){
+
+    readFromFile("../m.txt", buffer1);
+    readFromFile("../m.txt", buffer2);
+
+    
+}
