@@ -4,7 +4,6 @@
 #include <deque>
 #include <string>
 using namespace std;
-// assuming ^ indicates eof 
 
 enum TokenType {
     IDENTIFIER,
@@ -49,10 +48,10 @@ void readFromFile(const string& program, char buffer[]) {
     loc += bytesRead;
 
     if (file.eof()) {
-        buffer[bytesRead] = '^';
+        buffer[bytesRead] = EOF;
     }
 
-    buffer[BUF_SIZE-1] = '^';
+    buffer[BUF_SIZE-1] = -2;
 
     file.close();
 
@@ -126,8 +125,9 @@ void Token_Type(const std::string& token)
 
 int main(){
 
-    readFromFile("../m.txt", buffer1);
-    readFromFile("../m.txt", buffer2);
+  readFromFile("../m.txt", buffer1);
+  readFromFile("../m.txt", buffer2);
+
 
     
 }
