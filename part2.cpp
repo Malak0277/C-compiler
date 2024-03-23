@@ -5,6 +5,9 @@
 #include <string>
 using namespace std;
 
+//Notes: // + whitespaces + errors
+
+
 const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 string SymbolTable[1000][2]; //index is the entry		//DYNAMIC
@@ -14,7 +17,9 @@ enum TokenType {
     IDENTIFIER=1,
     NUMBER,
     OPERATOR,
+    COMMENT,
     SEMICOLON,
+    SEPERATOR,
 
 };
 
@@ -123,9 +128,12 @@ int main(){
 			
 			if(isalpha(c)|| c=='_')
 				state = 2;
-			else if(isdigit(c)){
+			else if(isdigit(c))
 				state = 3;
-			}
+			
+      else if(c =='/')
+        state = 20;
+
 		break;
 		case 2: 
 			if(isalnum(c) || c=='_')
@@ -159,6 +167,7 @@ int main(){
 				retrackFlag =true;
 				state = 1;
 			     }	
+      break;
 		case 4:
 		    if (isdigit(c))
 				state = 4;
@@ -167,10 +176,11 @@ int main(){
 			else if(isalpha(c))  //12d
 				state = ; //error
 			else {
-			    lexemeType = 2;
+			  lexemeType = 2;
 				retrackFlag =true;
 				state = 1;
-			     }
+			}
+    break;
 		case 5:
 		    if (isdigit(c))
 				state = 7;
@@ -178,28 +188,60 @@ int main(){
 			 	state = 6;
 			else 
 			 	state = ; // error
+      break;
 		case 6:
 			if (isdigit(c))
 				state = 7;
 			
 			else 
 			 	state = ; // error
+      break;
 		case 7:
 			if (isdigit(c))
 				state = 7;
 			else if(isalpha(c))  //12d
 				state = ; //error
 			else {
-			    lexemeType = 2;
+			  lexemeType = 2;
 				retrackFlag =true;
 				state = 1;
 			     }    
-			
-		default:
+    break;
+
+
+    case 20:
+      	if(c == '/') 
+          state = 23;
+        else if(c == '*')
+          state = 21;
+        
 			break;
+
+    case 21:
+      if(c == '*')
+        state = 22;
+      else
+        state = 21;
+      break;
+
+    case 22:
+      if(c == '*')
+        state = 22;
+      else if(c == '/'){
+        lexemeType = 4;
+				retrackFlag = false;
+				state = 1;
+      }
+      else 
+        state = 21;
+    break;
+
+    case 23:
+    break;
 		}
 
 	}
 	
     return 0;
 }
+
