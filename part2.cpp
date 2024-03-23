@@ -26,6 +26,7 @@ enum TokenType {
     COMMENT,
     SEMICOLON,
     SEPERATOR,
+    STRING,
 };
 
 struct Token {
@@ -108,8 +109,14 @@ int main(){
 			else if(isdigit(c))
 				state = 3;
 			
-      else if(c =='/')
-        state = 20;
+            else if(c =='/')
+             state = 20;
+            else if(c=='{'||c=='}'||c=='('||c==')'|| c== ',')
+            lexemeType=11; 
+            else if(c==';')
+                lexemeType=10; 
+            else if(c=='"')
+                state=24;
 
 		break;
 		case 2: 
@@ -280,6 +287,19 @@ int main(){
 
     case 23:
     break;
+    case 24: // string
+      if (isprint(c))
+        state = 25;
+      else 
+      state =; //error
+      break;
+    case 25:
+      if (isprint(c))
+        state = 25;
+      else if(c=='"'){
+        lexemeType = 12;
+	    state = 1;}
+
 		}
 
 	}
