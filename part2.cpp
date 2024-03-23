@@ -11,10 +11,11 @@ string SymbolTable[1000][2]; //index is the entry		//DYNAMIC
 //first 20 (or sth) rows are keywords
 
 enum TokenType {
-    IDENTIFIER,
+    IDENTIFIER=1,
     NUMBER,
     OPERATOR,
     SEMICOLON,
+
 };
 
 struct Token {
@@ -85,19 +86,24 @@ void Token_Type(const std::string& token) {
 
 
 int main(){
-	char *forward = buffer1, *start = buffer1;
+	char *forward = buffer1, *start = buffer1; 
+	int state = 1; 
+	char c; 
+	bool eofFlag = false, retrackFlag = false;
+	int lexemeType=-1 ;
+	
 
 	readFromFile("../m.txt", buffer1);
 	//readFromFile("../m.txt", buffer2);
 		
-	bool eofFlag = false;
+	
 	while(!eofFlag) {
 
-		switch(forward++){
+		switch(*forward){
 		case EOF:
-			if(forward == buffer1[BUF_SIZE-1])
+			if(*forward == buffer1[BUF_SIZE-1])
 				readFromFile("../m.txt", buffer2);
-			else if (forward == buffer2[BUF_SIZE-1])
+			else if (*forward == buffer2[BUF_SIZE-1])
 				readFromFile("../m.txt", buffer1);
 			else 
 				eofFlag = true;
@@ -105,6 +111,92 @@ int main(){
 			
 		default:
 			
+		}
+		c = *forward;
+		forward++;
+		// if(isspace(c)){
+		// 	state
+		// }
+		switch (state)
+		{
+		case 1: 
+			
+			if(isalpha(c)|| c=='_')
+				state = 2;
+			else if(isdigit(c)){
+				state = 3;
+			}
+		break;
+		case 2: 
+			if(isalnum(c) || c=='_')
+				state =2;
+			else if(isspace(c))
+			{
+				lexemeType = 1;
+				retrackFlag =true;
+				state = 0; //case 0 111111111111111111111111111111111111111111111111111111111111111111111111111
+			}
+			else{
+				lexemeType = 1;
+				retrackFlag =true;
+				state = 1;
+			}
+			break;
+		case 3:
+			if(c==0)
+			  	state =;
+			
+			else if (isdigit(c))
+				state = 3;
+			else if (c=='.')
+				state= 4;
+			else if (c=='e'||c=='E')
+				state= 5;
+			else if(isalpha(c))  //12d
+				state = ; //error
+			else {
+			    lexemeType = 2;
+				retrackFlag =true;
+				state = 1;
+			     }	
+		case 4:
+		    if (isdigit(c))
+				state = 4;
+			else if (c=='e'||c=='E')
+				state= 5;
+			else if(isalpha(c))  //12d
+				state = ; //error
+			else {
+			    lexemeType = 2;
+				retrackFlag =true;
+				state = 1;
+			     }
+		case 5:
+		    if (isdigit(c))
+				state = 7;
+			else if(c=='+'|| c=='-')
+			 	state = 6;
+			else 
+			 	state = ; // error
+		case 6:
+			if (isdigit(c))
+				state = 7;
+			
+			else 
+			 	state = ; // error
+		case 7:
+			if (isdigit(c))
+				state = 7;
+			else if(isalpha(c))  //12d
+				state = ; //error
+			else {
+			    lexemeType = 2;
+				retrackFlag =true;
+				state = 1;
+			     }    
+			
+		default:
+			break;
 		}
 
 	}
