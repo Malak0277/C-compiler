@@ -23,7 +23,6 @@ enum TokenType {
     RELOP,
     OPERATOR, 
     ASSIGNING_OP,
-    COMMENT,
     SEMICOLON,
     SEPERATOR,
     STRING,
@@ -112,9 +111,9 @@ int main(){
             else if(c =='/')
              state = 20;
             else if(c=='{'||c=='}'||c=='('||c==')'|| c== ',')
-            lexemeType=11; 
+            lexemeType=10; 
             else if(c==';')
-                lexemeType=10; 
+                lexemeType=9; 
             else if(c=='"')
                 state=24;
 
@@ -297,7 +296,7 @@ int main(){
       if (isprint(c))
         state = 25;
       else if(c=='"'){
-        lexemeType = 12;
+        lexemeType = 11;
 	    state = 1;}
 
 		}
