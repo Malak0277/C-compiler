@@ -5,7 +5,8 @@
 #include <string>
 using namespace std;
 
-//Notes: // + whitespaces + errors
+//Notes: // + whitespaces + retracting
+// errors + final_state_digits + sign in b/x/o?
 
 
 const int BUF_SIZE = 4096;
@@ -15,12 +16,16 @@ string SymbolTable[1000][2]; //index is the entry		//DYNAMIC
 
 enum TokenType {
     IDENTIFIER=1,
-    NUMBER,
-    OPERATOR,
+    DECIMAL,
+    BINARY,
+    OCTAL,
+    HEXA,
+    RELOP,
+    OPERATOR, 
+    ASSIGNING_OP,
     COMMENT,
     SEMICOLON,
     SEPERATOR,
-
 };
 
 struct Token {
@@ -59,35 +64,7 @@ void readFromFile(const string& program, char buffer[]) {
     file.close();
 }
 
-/*
-void Token_Type(const std::string& token) { 
-	static int Entry = 0;
-	switch(token) {
-	case 
-	
-	default:
-		throw runtime_error("Invalid token: " + token);
-	}
 
-	if(isOperator(token))
-		cout << "(operator, " << token << ")";
-	else if(isSeparator(token))
-		cout << "(separator, " << token << ")";
-	else if(isKeyword(token))
-		cout << "(keyword, " << token << ")";
-	else if(isStatement(token))
-		cout << "(statement, " << token << ")";
-	else if(isLiteral(token))
-		cout << "(literal, " << token << ")";
-	else if(isID(token))
-		cout << "(identifier, " << token << ")";
-		tokenArray[Entry] = {token,TokenType::IDENTIFIER};
-	else if(isComment(token))
-		cout << "(comment, " << token << ")";
-	else
-		throw std::runtime_error("Invalid token: " + token);
-}
-*/
 
 
 int main(){
@@ -95,7 +72,7 @@ int main(){
 	int state = 1; 
 	char c; 
 	bool eofFlag = false, retrackFlag = false;
-	int lexemeType=-1 ;
+	int lexemeType = -1 ;
 	
 
 	readFromFile("../m.txt", buffer1);
@@ -152,7 +129,7 @@ int main(){
 			break;
 		case 3:
 			if(c==0)
-			  	state =;
+			  	state = 8;
 			
 			else if (isdigit(c))
 				state = 3;
@@ -161,7 +138,7 @@ int main(){
 			else if (c=='e'||c=='E')
 				state= 5;
 			else if(isalpha(c))  //12d
-				state = ; //error
+				;//state = ; //error
 			else {
 			    lexemeType = 2;
 				retrackFlag =true;
@@ -174,7 +151,7 @@ int main(){
 			else if (c=='e'||c=='E')
 				state= 5;
 			else if(isalpha(c))  //12d
-				state = ; //error
+				;//state = ; //error
 			else {
 			  lexemeType = 2;
 				retrackFlag =true;
@@ -187,26 +164,91 @@ int main(){
 			else if(c=='+'|| c=='-')
 			 	state = 6;
 			else 
-			 	state = ; // error
+			 	;//state = ; // error
       break;
 		case 6:
 			if (isdigit(c))
 				state = 7;
 			
 			else 
-			 	state = ; // error
+			 	;//state = ; // error
       break;
 		case 7:
 			if (isdigit(c))
 				state = 7;
 			else if(isalpha(c))  //12d
-				state = ; //error
+				;//state = ; //error
 			else {
 			  lexemeType = 2;
 				retrackFlag =true;
 				state = 1;
 			     }    
     break;
+
+    case 8:
+      if (c == 'b' || c == 'B')
+        state = 9;
+      else if (c == 'x' || c == 'X')
+        state = 10;
+      else if(isdigit(c))
+        state = 11;
+      else if(isalpha(c))
+        ;//state = ; //error
+      else 
+        lexemeType = 2;
+				retrackFlag = true;
+				state = 1;
+    break;
+
+    case 9:
+      if(c == '0' || c == '1')
+        state = 9;
+      else if(isalnum(c))
+        ;//state = ; //error
+      else 
+        lexemeType = 3;
+				retrackFlag = true;
+				state = 1;
+    break;
+
+    case 10:
+      if (isdigit(c) || c == 'A' || c == 'a' || c == 'B' || c == 'b' || c == 'C' || c == 'c' ||
+          c == 'D' || c == 'd' || c == 'E' || c == 'e' || c == 'F' || c == 'f'){
+            state = 10;
+      }
+      else if(isalpha)
+        ;//state = ; //error
+      else 
+        lexemeType = 5;
+				retrackFlag = true;
+				state = 1;
+    break;
+
+    case 11: 
+      if(c == '8' || c == '9')
+        ;//state = ; //error
+      else if (isdigit(c))
+        state = 11;
+      else 
+        lexemeType = 4;
+				retrackFlag = true;
+				state = 1;
+    break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     case 20:
@@ -228,7 +270,7 @@ int main(){
       if(c == '*')
         state = 22;
       else if(c == '/'){
-        lexemeType = 4;
+        lexemeType = 9;
 				retrackFlag = false;
 				state = 1;
       }
