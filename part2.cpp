@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 
-//Notes: // + whitespaces + retracting
+//Notes: // + whitespaces + retracting + lexemeType=-1 and retract_flag=false
 // errors + final_state_digits + sign in b/x/o?
 
 
@@ -15,15 +15,14 @@ string SymbolTable[1000][2]; //index is the entry		//DYNAMIC
 //first 20 (or sth) rows are keywords
 
 enum TokenType {
-    IDENTIFIER=1,
-    DECIMAL,
-    BINARY,
-    OCTAL,
-    HEXA,
+    ID = 1,
+    DEC,
+    BIN,
+    OCT,
+    HEX,
     RELOP,
     OPERATOR, 
     ASSIGNING_OP,
-    COMMENT,
     SEMICOLON,
     SEPERATOR,
 };
@@ -128,9 +127,8 @@ int main(){
 			}
 			break;
 		case 3:
-			if(c==0)
+			if(c == 0)
 			  	state = 8;
-			
 			else if (isdigit(c))
 				state = 3;
 			else if (c=='.')
@@ -140,15 +138,15 @@ int main(){
 			else if(isalpha(c))  //12d
 				;//state = ; //error
 			else {
-			    lexemeType = 2;
-				retrackFlag =true;
+			  lexemeType = 2;
+				retrackFlag = true;
 				state = 1;
-			     }	
+			  }	
       break;
 		case 4:
-		    if (isdigit(c))
+		  if (isdigit(c))
 				state = 4;
-			else if (c=='e'||c=='E')
+			else if (c=='e'|| c=='E')
 				state= 5;
 			else if(isalpha(c))  //12d
 				;//state = ; //error
@@ -182,7 +180,7 @@ int main(){
 			  lexemeType = 2;
 				retrackFlag =true;
 				state = 1;
-			     }    
+			}    
     break;
 
     case 8:
@@ -229,6 +227,8 @@ int main(){
         ;//state = ; //error
       else if (isdigit(c))
         state = 11;
+      else if(isalpha)
+        ;//state = ; //error
       else 
         lexemeType = 4;
 				retrackFlag = true;
@@ -238,25 +238,11 @@ int main(){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     case 20:
       	if(c == '/') 
           state = 23;
         else if(c == '*')
           state = 21;
-        
 			break;
 
     case 21:
@@ -270,8 +256,7 @@ int main(){
       if(c == '*')
         state = 22;
       else if(c == '/'){
-        lexemeType = 9;
-				retrackFlag = false;
+        lexemeType = 0; //no token returned, just move the start
 				state = 1;
       }
       else 
@@ -279,6 +264,13 @@ int main(){
     break;
 
     case 23:
+      if(c == '/') 
+          state = 23;
+      if(c=='\n'){  //////////////
+        lexemeType = 0; //no token returned, just move the start
+				state = 1;
+      }
+      
     break;
 		}
 
