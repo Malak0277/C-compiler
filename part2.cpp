@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 
-//Notes: // + whitespaces + retracting + lexemeType=-1 and retract_flag=false
+//Notes: // + whitespaces + retracting + lexemeType=-1 and retract_flag=false + retract_flag = true => start = forward
 // errors + final_state_digits + sign in b/x/o?
 
 
@@ -78,13 +78,22 @@ int main(){
 	//readFromFile("../m.txt", buffer2);
 		
 	
-	while(!eofFlag) {
+	while(1) {
+    if(retrackFlag){
+      if(forward == buffer1)
+        forward = &buffer2[BUF_SIZE-2];
+      else if(forward == buffer2)
+        forward = &buffer1[BUF_SIZE-2];
+      else 
+        forward--;
+
+    }
 
 		switch(*forward){
 		case EOF:
-			if(*forward == buffer1[BUF_SIZE-1])
+			if(forward == &buffer1[BUF_SIZE-1])
 				readFromFile("../m.txt", buffer2);
-			else if (*forward == buffer2[BUF_SIZE-1])
+			else if (forward == &buffer2[BUF_SIZE-1])
 				readFromFile("../m.txt", buffer1);
 			else 
 				eofFlag = true;
@@ -93,6 +102,10 @@ int main(){
 		default:
 			
 		}
+
+    if(eofFlag)
+      break;
+
 		c = *forward;
 		forward++;
 		// if(isspace(c)){
