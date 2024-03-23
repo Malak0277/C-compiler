@@ -6,6 +6,8 @@ using namespace std;
 
 //Notes:   
 // errors + final_state_digits 
+//symbol table
+//dynamic arrays
 
 static int tokenIndex = 0;
 const int BUF_SIZE = 4096;
@@ -367,7 +369,7 @@ int main(){
     break;
         
     case 12:
-        if(c == '=' || c == '>'){   
+        if(c == '='){   
             lexemeType = 6;
             state = 1;
         }else{   
@@ -510,6 +512,7 @@ int main(){
       else 
       ;//state =; //error
       break;
+      
     case 25:
       if (isprint(c))
         state = 25;

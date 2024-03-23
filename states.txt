@@ -1,0 +1,14 @@
+state 0 => whitespaces
+state 1 => starting state
+state 2 => identifier
+state 3 => starting of digits
+state 4-7 => decimal 
+state 8 => starting of digits (starting with 0)
+state 9 => binary 
+state 10 => hex
+state 11 => oct
+state 12-15 => relop 
+state 15-17 => operators 
+state 18-19+26 => logical
+state 20-23 => comment
+state 24-25 => string
