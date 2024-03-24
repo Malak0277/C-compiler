@@ -1,6 +1,7 @@
 #include <iostream>
-#include <string>
 #include <fstream>
+#include <string>
+#include <vector>
 #include <map>
 using namespace std;
 
@@ -14,13 +15,17 @@ const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 
 struct Token {
-    string value;
     string type;
+    string value;
 };
-
 Token tokenArray[1000];		//one element = type + value	//DYNAMIC
+//Token* tokenArray = new Token[1000];
+//vector<Token> tokenArray;
 
-string SymbolTable[1000][2]		//index is the entry		//DYNAMIC
+//dynamic array:     //std::string** symbolTable = new std::string*[1000]; for (int i = 0; i < 1000; ++i) symbolTable[i] = new std::string[2];
+//vector of vector:  //vector<vector<string>> symbolTable(1000, vector<string>(2));
+//vector of array:   //vector<array<int, 2>> symbolTable;
+string symbolTable[1000][2]		//index is the entry, lexeme, and type.		//DYNAMIC
      = {
         {"auto", "keyword"},
         {"break", "keyword"},
@@ -57,8 +62,17 @@ string SymbolTable[1000][2]		//index is the entry		//DYNAMIC
         //identifiers starts from index 32
 };
 
+int isInTable(string identifier) {
+    int entry = 0;
+    while(symbolTable[entry][0] != "") {
+        if (symbolTable[entry][0] == identifier) return -1;
+        entry++;
+    }
+    return entry;
+}
+
 string getTokenType(int type) {
-    static map<int, string> tokenStrings = {
+    static map<int, string> tokenTypes = {
             {1, "ID"},
             {2, "DEC"},
             {3, "BIN"},
@@ -73,8 +87,8 @@ string getTokenType(int type) {
             {12, "LOGICAL_OP"}, //&&, ||, !
     };
 
-    auto it = tokenStrings.find(type);
-    if (it != tokenStrings.end()) {
+    auto it = tokenTypes.find(type);
+    if (it != tokenTypes.end()) {
         return it->second;
     } else {
         return "UNKNOWN";
@@ -113,7 +127,7 @@ void readFromFile(const string& program, char buffer[]) {
 void printSymbolTable(){
     cout << "Index\tKeyword\t\tType" << endl;
     for (int i = 0; i < 32; i++)
-        cout << i << "\t" << SymbolTable[i][0] << "\t\t" << SymbolTable[i][1] << endl;
+        cout << i << "\t" << symbolTable[i][0] << "\t\t" << symbolTable[i][1] << endl;
 }
 
 
@@ -158,7 +172,7 @@ int main() {
             //I thought eno da mfrod hyb2a b3d el wile el kbera...
             /*
             if(lexemeType == 1){ //SYMBOL TABLE
-
+3amatn el code ely t7t hyet7at hna m3 eny msh 3yza :((
             } else if(lexemeType == 9 ||  lexemeType == 11){
 
             } else {
@@ -168,7 +182,6 @@ int main() {
 
             tokenIndex++;
         } else if (state == 1) start = forward;
-
 
         if (*forward == EOF) {
             if (forward == &buffer1[BUF_SIZE - 1])
@@ -507,6 +520,25 @@ int main() {
         }
     }
 
+    //case token is id:
+    int STindex = 32;
+    for (int i = 0; i < tokenIndex; i++) {
+        int inTable = isInTable(tokenArray[i].value);
+        if (inTable >= 0 && inTable < 32) //it is a keyword
+            tokenArray[i].type = "keyword";
+        else if (tokenArray[i].type == "ID" && inTable == -1) {      //add to ST
+            symbolTable[STindex][0] = tokenArray[i].value;
+            symbolTable[STindex][1] = tokenArray[i].type;
+            tokenArray[i].value = STindex++;    //entry to (index in) symbol table
+        } else
+            tokenArray[i].value = inTable;      //entry to symbol table
+    }
 
+    //kont bgarab print ay haga
+    for (int i = 0; i < 3; i++) {
+        cout << tokenArray[i].value << " " << tokenArray[i].type << endl;
+    }
+
+    //delete[] tokenArray;
     return 0;
 }
