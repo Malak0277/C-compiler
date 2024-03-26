@@ -5,49 +5,26 @@
 #include <map>
 using namespace std;
 
-//Notes:
-//symbol table
-//dynamic arrays
-
-//static int tokenIndex = 0;
 const int BUF_SIZE = 4096;
-char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 
 struct Token {
     string type;
     string stringValue;
     int intValue;
 };
-Token tokenArray[1000];		//one element = type + value	//DYNAMIC
-//Token* tokenArray = new Token[1000];
-//vector<Token> tokenArray;
+vector<Token> tokenArray;
 
 vector<string> symbolTable = {
         "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
         "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
-        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while" };
-        //identifiers starts from index 32
+        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
+};        //identifiers starts from index 32
 
 int isInTable(string identifier) {
     int entry = 0;
     while(symbolTable[entry++] != "")
-        if (symbolTable[entry] == identifier) return -1;
-    return entry;
-}
-
-void aasignIdType(Token id) {
-    static int STindex = 32;
-    //while (symbolTable[STindex] != "") STindex++;     //da lw msh static
-    int inTable = isInTable(id.stringValue);
-    if (inTable == -1) {
-        symbolTable[STindex] = id.stringValue;
-        id.type = "Identifier";         //DA MWGOD FEL STATES???    ////////////////////////
-        id.intValue = STindex++;    //entry to (index in) symbol table
-    }
-    else if (inTable >= 0 && inTable < 32) //it is a keyword
-        id.type = "keyword";
-    else
-        id.intValue = inTable;      //entry to symbol table
+        if (symbolTable[entry] == identifier) return -1;	//-1 means exist
+    return entry;			//index to insert in
 }
 
 string getTokenType(int type) {
@@ -112,12 +89,14 @@ void printSymbolTable(){
 
 
 int main() {
+    char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
+    static int STindex = 32;
+
     char *forward = buffer1, *start = buffer1;
-    int state = 1, tokenIndex = 0;
+    int state = 1, tokenIndex = 0, lexemeType = -1;
     char c;
     bool eofFlag = false, retrackFlag = false;
     string lexeme;
-    int lexemeType = -1;
 
     printSymbolTable();
     readFromFile("../m.txt", buffer1);
@@ -146,13 +125,22 @@ int main() {
                 lexeme += *start;
                 start++;
             }
-            
+
         } else if (state == 1) start = forward;
 
         tokenArray[tokenIndex].type = getTokenType(lexemeType);
-        if(lexemeType == 1)
-            //Mariaaam
-            ;
+
+        if(lexemeType == 1) {
+            int inTable = isInTable(lexeme);
+            if (inTable >=0 && inTable < 32)
+                tokenArray[tokenIndex].type = "keyword";
+            if (inTable < STindex)
+                tokenArray[tokenIndex].intValue = inTable;
+            else {
+                symbolTable[STindex] = lexeme;
+                tokenArray[tokenIndex].intValue = STindex++;
+            }
+        }
             /*
             1 - int - ptr
             2/3/4/5 - int - number
@@ -162,8 +150,7 @@ int main() {
             tokenArray[tokenIndex].intValue = stoi(lexeme);
         else if(lexemeType >= 6 || lexemeType <= 12)
             tokenArray[tokenIndex].stringValue = lexeme;
-        tokenIndex++; 
-
+        tokenIndex++;
 
 
         if (*forward == EOF) {
@@ -227,7 +214,7 @@ int main() {
                     state = 31;
                 else if (c=='.')
                     lexemeType=10;
-                else 
+                else
                     state = 27;
                 break;
 
@@ -365,8 +352,8 @@ int main() {
                     lexemeType = 6;
                     state = 1;
                 }
-                else if (c=='<') 
-                  state = 29;
+                else if (c=='<')
+                    state = 29;
                 else {
                     lexemeType = 6;
                     retrackFlag = true;
@@ -379,8 +366,8 @@ int main() {
                     lexemeType = 6;
                     state = 1;
                 }
-                else if (c=='>') 
-                  state = 30;
+                else if (c=='>')
+                    state = 30;
                 else {
                     lexemeType = 6;
                     retrackFlag = true;
@@ -452,7 +439,7 @@ int main() {
                 break;
 
             case 18:
-                if (c == '&') 
+                if (c == '&')
                     lexemeType = 12;
                 else if(c=='=')
                     lexemeType = 8;
@@ -464,9 +451,9 @@ int main() {
             case 19:
                 if (c == '|') {
                     lexemeType = 12;
-                } else if(c==0) 
+                } else if(c==0)
                     lexemeType = 8;
-                  else
+                else
                     retrackFlag = true;
                 state = 1;
                 break;
@@ -510,17 +497,17 @@ int main() {
                     state = 24;
                 }
                 else
-                  lexemeType=11;
-                  state =1;
-                break; 
-              
+                    lexemeType=11;
+                state =1;
+                break;
 
-            /*case 25: // string
-                if (c == '\'') { //edit
-                    lexemeType = 11;
-                    state = 1;
-                }
-                break;  //nothing will cause an error*/
+
+                /*case 25: // string
+                    if (c == '\'') { //edit
+                        lexemeType = 11;
+                        state = 1;
+                    }
+                    break;  //nothing will cause an error*/
 
             case 26:
                 if (c == '=') {
@@ -545,39 +532,39 @@ int main() {
                 }
             case 28:
                 if(c=='=')
-                  lexemeType=8;
+                    lexemeType=8;
                 else
-                  retrackFlag = true;
+                    retrackFlag = true;
                 state = 1;
                 break;
             case 29:
                 if(c=='=')
-                  lexemeType=8;
+                    lexemeType=8;
                 else
-                  retrackFlag=true;
-                  lexemeType=13;
+                    retrackFlag=true;
+                lexemeType=13;
                 state=1;
                 break;
             case 30:
                 if(c=='=')
-                  lexemeType=8;
+                    lexemeType=8;
                 else
-                  retrackFlag=true;
-                  lexemeType=13;
+                    retrackFlag=true;
+                lexemeType=13;
                 state=1;
                 break;
             case 31:
                 if(c==':'){
-                  lexemeType=7;
-                  state =1;}
+                    lexemeType=7;
+                    state =1;}
                 else{
-                  state = 27;
+                    state = 27;
                 }
                 break;
-                
-            
 
-        
+
+
+
         }
     }
 
