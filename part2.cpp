@@ -22,45 +22,42 @@ Token tokenArray[1000];		//one element = type + value	//DYNAMIC
 //Token* tokenArray = new Token[1000];
 //vector<Token> tokenArray;
 
-//dynamic array:     //std::string** symbolTable = new std::string*[1000]; for (int i = 0; i < 1000; ++i) symbolTable[i] = new std::string[2];
-//vector of vector:  //vector<vector<string>> symbolTable(1000, vector<string>(2));
-//vector of array:   //vector<array<int, 2>> symbolTable;
-string symbolTable[1000][2]		//index is the entry, lexeme, and type.		//DYNAMIC
-     = {
-        {"auto", "keyword"},
-        {"break", "keyword"},
-        {"case", "keyword"},
-        {"char", "keyword"},
-        {"const", "keyword"},
-        {"continue", "keyword"},
-        {"default", "keyword"},
-        {"do", "keyword"},
-        {"double", "keyword"},
-        {"else", "keyword"},
-        {"enum", "keyword"},
-        {"extern", "keyword"},
-        {"float", "keyword"},
-        {"for", "keyword"},
-        {"goto", "keyword"},
-        {"if", "keyword"},
-        {"int", "keyword"},
-        {"long", "keyword"},
-        {"register", "keyword"},
-        {"return", "keyword"},
-        {"short", "keyword"},
-        {"signed", "keyword"},
-        {"sizeof", "keyword"},
-        {"static", "keyword"},
-        {"struct", "keyword"},
-        {"switch", "keyword"},
-        {"typedef", "keyword"},
-        {"union", "keyword"},
-        {"unsigned", "keyword"},
-        {"void", "keyword"},
-        {"volatile", "keyword"},
-        {"while", "keyword"}
-        //identifiers starts from index 32
-};
+
+vector<pair<string, string>> symbolTable = {
+                {"auto", "keyword"},
+                {"break", "keyword"},
+                {"case", "keyword"},
+                {"char", "keyword"},
+                {"const", "keyword"},
+                {"continue", "keyword"},
+                {"default", "keyword"},
+                {"do", "keyword"},
+                {"double", "keyword"},
+                {"else", "keyword"},
+                {"enum", "keyword"},
+                {"extern", "keyword"},
+                {"float", "keyword"},
+                {"for", "keyword"},
+                {"goto", "keyword"},
+                {"if", "keyword"},
+                {"int", "keyword"},
+                {"long", "keyword"},
+                {"register", "keyword"},
+                {"return", "keyword"},
+                {"short", "keyword"},
+                {"signed", "keyword"},
+                {"sizeof", "keyword"},
+                {"static", "keyword"},
+                {"struct", "keyword"},
+                {"switch", "keyword"},
+                {"typedef", "keyword"},
+                {"union", "keyword"},
+                {"unsigned", "keyword"},
+                {"void", "keyword"},
+                {"volatile", "keyword"},
+                {"while", "keyword"}
+                //identifiers starts from index 32
+        };
 
 int isInTable(string identifier) {
     int entry = 0;
@@ -79,14 +76,14 @@ string getTokenType(int type) {
             {4, "OCT"},
             {5, "HEX"},
             {6, "RELOP"}, //>, <, >=, <=, <>, ==, !=
-            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &,   
+            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &,
             {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
             {10, "PUNCTUATION"}, // {} () [] , ; . ->
-            {11, "LITERAL"}, 
+            {11, "LITERAL"},
             {12, "LOGICAL_OP"}, //&&, ||, !
             {13, "BITWISE_OP"}, // |, ~, ^, <<, >>
     };
-      
+
 
     auto it = tokenTypes.find(type);
     if (it != tokenTypes.end()) {
@@ -164,26 +161,26 @@ int main() {
                     if (start == &buffer2[BUF_SIZE - 1])
                         start = buffer1;
                 }
-                lexeme += *start;   
+                lexeme += *start;
                 start++;
             }
             tokenIndex++;
         } else if (state == 1) start = forward;
 
-            tokenArray[tokenIndex].type = getTokenType(lexemeType);
-            if(lexemeType == 1)
-              //Mariaaam 
+        tokenArray[tokenIndex].type = getTokenType(lexemeType);
+        if(lexemeType == 1)
+            //Mariaaam
             ;
             /*
             1 - int - ptr
             2/3/4/5 - int - number
             6-12 - String - content
             */
-            else if(lexemeType >= 2 || lexemeType <= 5)
-              tokenArray[tokenIndex].intValue = stoi(lexeme);
-            else if(lexemeType >= 6 || lexemeType <= 12)
-              tokenArray[tokenIndex].stringValue = lexeme;
-            
+        else if(lexemeType >= 2 || lexemeType <= 5)
+            tokenArray[tokenIndex].intValue = stoi(lexeme);
+        else if(lexemeType >= 6 || lexemeType <= 12)
+            tokenArray[tokenIndex].stringValue = lexeme;
+
 
 
         if (*forward == EOF) {
@@ -199,7 +196,7 @@ int main() {
         forward++;
         switch (state) {
             case 0:
-                if (isspace(c)) 
+                if (isspace(c))
                     state = 0;
                 else {
                     state = 1;
@@ -207,7 +204,7 @@ int main() {
                 }
             case 1:
                 if (isspace(c))
-                    state = 0;   
+                    state = 0;
                 else if (isalpha(c) || c == '_')
                     state = 2;
                 else if (isdigit(c))
@@ -265,7 +262,7 @@ int main() {
                     state = 4;
                 else if (c == 'e' || c == 'E')
                     state = 5;
-                else if (isalpha(c)) 
+                else if (isalpha(c))
                     state = 27;
                 else {
                     lexemeType = 2;
@@ -279,7 +276,7 @@ int main() {
                     state = 4;
                 else if (c == 'e' || c == 'E')
                     state = 5;
-                else if (isalpha(c))  
+                else if (isalpha(c))
                     state = 27;
                 else {
                     lexemeType = 2;
@@ -293,10 +290,10 @@ int main() {
                     state = 7;
                 else if (c == '+' || c == '-')
                     state = 6;
-                else 
-                    state = 27;  
+                else
+                    state = 27;
                 break;
-                   
+
             case 6:
                 if (isdigit(c))
                     state = 7;
@@ -307,7 +304,7 @@ int main() {
             case 7:
                 if (isdigit(c))
                     state = 7;
-                else if (isalpha(c))  
+                else if (isalpha(c))
                     state = 27;
                 else {
                     lexemeType = 2;
@@ -359,10 +356,10 @@ int main() {
 
             case 11:
                 if (c == '8' || c == '9')
-                    state = 27; 
+                    state = 27;
                 else if (isdigit(c))
                     state = 11;
-                else if (isalpha(c))   
+                else if (isalpha(c))
                     state = 27;
                 else {
                     lexemeType = 4;
@@ -445,8 +442,8 @@ int main() {
                 else if (isdigit(c))
                     state = 3;
                 else if(c == '>'){
-                     lexemeType = 10;
-                     state = 1;
+                    lexemeType = 10;
+                    state = 1;
                 }
                 else {
                     lexemeType = 7;
@@ -456,30 +453,30 @@ int main() {
                 break;
 
             case 18:
-                if (c == '&') {  
-                    lexemeType = 12;  
+                if (c == '&') {
+                    lexemeType = 12;
                     state = 1;
                 } else {
                     retrackFlag = true;
                     //state = error;   //not
                 }
                 break;
-                
+
             case 19:
                 if (c == '|') {
                     lexemeType = 12;
                     state = 1;
                 } else {
-                retrackFlag = true;
-                //state = error;
+                    retrackFlag = true;
+                    //state = error;
                 }
-                break; 
-            //^
+                break;
+                //^
 
             case 20:
                 if (c == '/')
                     state = 23;
-                else if (c == '*')   
+                else if (c == '*')
                     state = 21;
                 break;
 
@@ -509,35 +506,35 @@ int main() {
                 }
                 break;
 
-          case 24: // string
+            case 24: // string
                 if (c == '"') {
-                  lexemeType = 11;
-                  state = 1;
-                }
-                break;  //nothing will cause an error
-
-          case 25: // string
-                if (c == '\'') { //edit
-                  lexemeType = 11;
-                  state = 1;
-                }
-                break;  //nothing will cause an error
-
-        /*case 24: // string
-                if (isprint(c)) 
-                    state = 25;
-                else;//state =; //error
-                break;
-            case 25:
-                if (isprint(c))
-                    state = 25;
-                else if (c == '"') {
                     lexemeType = 11;
                     state = 1;
-                } else;//state =; //error
-                break;
-            */
-                
+                }
+                break;  //nothing will cause an error
+
+            case 25: // string
+                if (c == '\'') { //edit
+                    lexemeType = 11;
+                    state = 1;
+                }
+                break;  //nothing will cause an error
+
+                /*case 24: // string
+                        if (isprint(c))
+                            state = 25;
+                        else;//state =; //error
+                        break;
+                    case 25:
+                        if (isprint(c))
+                            state = 25;
+                        else if (c == '"') {
+                            lexemeType = 11;
+                            state = 1;
+                        } else;//state =; //error
+                        break;
+                    */
+
 
             case 26:
                 if (c == '=') {
@@ -550,48 +547,49 @@ int main() {
                 }
                 break;
 
-            case 27:   //Error state   
-              if(isspace(c)){//edit
-                char *temp = start;
-                cerr<<"invalid token: ";  //do we need to save it as a token?
-                while(temp != forward)
-                  cout<<temp++;
-                cout << endl;
-                state = 0;
-            break;
-            }
+            case 27:   //Error state
+                if(isspace(c)){//edit
+                    char *temp = start;
+                    cerr<<"invalid token: ";  //do we need to save it as a token?
+                    while(temp != forward)
+                        cout<<temp++;
+                    cout << endl;
+                    state = 0;
+                    break;
+                }
+        }
     }
-  }
-  
-  if(state != 1){
-    cerr << "token incomplete: ";
-    while(start!= forward)
-        cout<<start++;
-    cout << endl;
-  }
 
-  cout << "end of file reached" <<endl;
+    if(state != 1){
+        cerr << "token incomplete: ";
+        while(start!= forward)
+            cout<<start++;
+        cout << endl;
+    }
 
-    
+    cout << "end of file reached" << endl;
+
+
     //case token is id:
     int STindex = 32;
     for (int i = 0; i < tokenIndex; i++) {
-        int inTable = isInTable(tokenArray[i].value);
+        int inTable = isInTable(tokenArray[i].stringValue);
         if (inTable >= 0 && inTable < 32) //it is a keyword
             tokenArray[i].type = "keyword";
         else if (tokenArray[i].type == "ID" && inTable == -1) {      //add to ST
-            symbolTable[STindex][0] = tokenArray[i].value;
+            symbolTable[STindex][0] = tokenArray[i].stringValue;
             symbolTable[STindex][1] = tokenArray[i].type;
-            tokenArray[i].value = STindex++;    //entry to (index in) symbol table
+            tokenArray[i].stringValue = STindex++;    //entry to (index in) symbol table
         } else
-            tokenArray[i].value = inTable;      //entry to symbol table
+            tokenArray[i].intValue = inTable;      //entry to symbol table
     }
 
     //kont bgarab print ay haga
     for (int i = 0; i < 3; i++) {
-        cout << tokenArray[i].value << " " << tokenArray[i].type << endl;
+        cout << tokenArray[i].intValue << " " << tokenArray[i].type << endl;
     }
 
     //delete[] tokenArray;
     return 0;
+}
 }
