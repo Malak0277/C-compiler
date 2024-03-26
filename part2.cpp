@@ -22,50 +22,32 @@ Token tokenArray[1000];		//one element = type + value	//DYNAMIC
 //Token* tokenArray = new Token[1000];
 //vector<Token> tokenArray;
 
-
-vector<pair<string, string>> symbolTable = {
-                {"auto", "keyword"},
-                {"break", "keyword"},
-                {"case", "keyword"},
-                {"char", "keyword"},
-                {"const", "keyword"},
-                {"continue", "keyword"},
-                {"default", "keyword"},
-                {"do", "keyword"},
-                {"double", "keyword"},
-                {"else", "keyword"},
-                {"enum", "keyword"},
-                {"extern", "keyword"},
-                {"float", "keyword"},
-                {"for", "keyword"},
-                {"goto", "keyword"},
-                {"if", "keyword"},
-                {"int", "keyword"},
-                {"long", "keyword"},
-                {"register", "keyword"},
-                {"return", "keyword"},
-                {"short", "keyword"},
-                {"signed", "keyword"},
-                {"sizeof", "keyword"},
-                {"static", "keyword"},
-                {"struct", "keyword"},
-                {"switch", "keyword"},
-                {"typedef", "keyword"},
-                {"union", "keyword"},
-                {"unsigned", "keyword"},
-                {"void", "keyword"},
-                {"volatile", "keyword"},
-                {"while", "keyword"}
-                //identifiers starts from index 32
-        };
+vector<string> symbolTable = {
+        "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
+        "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
+        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while" };
+        //identifiers starts from index 32
 
 int isInTable(string identifier) {
     int entry = 0;
-    while(symbolTable[entry][0] != "") {
-        if (symbolTable[entry][0] == identifier) return -1;
-        entry++;
-    }
+    while(symbolTable[entry++] != "")
+        if (symbolTable[entry] == identifier) return -1;
     return entry;
+}
+
+void aasignIdType(Token id) {
+    static int STindex = 32;
+    //while (symbolTable[STindex] != "") STindex++;     //da lw msh static
+    int inTable = isInTable(id.stringValue);
+    if (inTable == -1) {
+        symbolTable[STindex] = id.stringValue;
+        id.type = "Identifier";         //DA MWGOD FEL STATES???    ////////////////////////
+        id.intValue = STindex++;    //entry to (index in) symbol table
+    }
+    else if (inTable >= 0 && inTable < 32) //it is a keyword
+        id.type = "keyword";
+    else
+        id.intValue = inTable;      //entry to symbol table
 }
 
 string getTokenType(int type) {
@@ -569,27 +551,6 @@ int main() {
 
     cout << "end of file reached" << endl;
 
-
-    //case token is id:
-    int STindex = 32;
-    for (int i = 0; i < tokenIndex; i++) {
-        int inTable = isInTable(tokenArray[i].stringValue);
-        if (inTable >= 0 && inTable < 32) //it is a keyword
-            tokenArray[i].type = "keyword";
-        else if (tokenArray[i].type == "ID" && inTable == -1) {      //add to ST
-            symbolTable[STindex][0] = tokenArray[i].stringValue;
-            symbolTable[STindex][1] = tokenArray[i].type;
-            tokenArray[i].stringValue = STindex++;    //entry to (index in) symbol table
-        } else
-            tokenArray[i].intValue = inTable;      //entry to symbol table
-    }
-
-    //kont bgarab print ay haga
-    for (int i = 0; i < 3; i++) {
-        cout << tokenArray[i].intValue << " " << tokenArray[i].type << endl;
-    }
-
     //delete[] tokenArray;
     return 0;
-}
 }
