@@ -33,3 +33,14 @@ vector<pair<string, string>> symbolTable = {
                 {"while", "keyword"}
                 //identifiers starts from index 32
         };
+
+int isInTable(string identifier) {
+    int entry = 0;
+    while(symbolTable[entry][0] != "") {
+        if (symbolTable[entry][0] == identifier) return -1;
+        entry++;
+    }
+    return entry;
+}
+----------------------------
+Token getNextToken();

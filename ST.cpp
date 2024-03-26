@@ -1,116 +1,57 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <map>
-using namespace std;
-
-const int BUF_SIZE = 4096;
-
-struct Token {
-    string type;
-    string stringValue;
-    int intValue;
-};
-vector<Token> tokenArray;
-
-vector<string> symbolTable = {
-        "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
-        "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
-        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
-};        //identifiers starts from index 32
-
-Token getNextToken(const char* buffer1, const char* buffer2);
-int isInTable(string identifier);
-string getTokenType(int type);
-void readFromFile(const string& program, char buffer[]);
-void printSymbolTable();
-
-int main() {
-    char buffer1[BUF_SIZE], buffer2[BUF_SIZE];      ////parameter
-    readFromFile("../m.txt", buffer1);
-    getNextToken(buffer1, buffer2);
-
-//    printSymbolTable();
-//    cout << "end of file reached" << endl;
-    return 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////
+vector<pair<string, string>> symbolTable = {
+                {"auto", "keyword"},
+                {"break", "keyword"},
+                {"case", "keyword"},
+                {"char", "keyword"},
+                {"const", "keyword"},
+                {"continue", "keyword"},
+                {"default", "keyword"},
+                {"do", "keyword"},
+                {"double", "keyword"},
+                {"else", "keyword"},
+                {"enum", "keyword"},
+                {"extern", "keyword"},
+                {"float", "keyword"},
+                {"for", "keyword"},
+                {"goto", "keyword"},
+                {"if", "keyword"},
+                {"int", "keyword"},
+                {"long", "keyword"},
+                {"register", "keyword"},
+                {"return", "keyword"},
+                {"short", "keyword"},
+                {"signed", "keyword"},
+                {"sizeof", "keyword"},
+                {"static", "keyword"},
+                {"struct", "keyword"},
+                {"switch", "keyword"},
+                {"typedef", "keyword"},
+                {"union", "keyword"},
+                {"unsigned", "keyword"},
+                {"void", "keyword"},
+                {"volatile", "keyword"},
+                {"while", "keyword"}
+                //identifiers starts from index 32
+        };
 
 int isInTable(string identifier) {
     int entry = 0;
-    while(symbolTable[entry++] != "")
-        if (symbolTable[entry] == identifier) return -1;	//-1 means exist
-    return entry;			//index to insert in
-}
-
-string getTokenType(int type) {
-    static map<int, string> tokenTypes = {
-            {1, "ID"},
-            {2, "DEC"},
-            {3, "BIN"},
-            {4, "OCT"},
-            {5, "HEX"},
-            {6, "RELOP"}, //>, <, >=, <=, <>, ==, != doneeeee
-            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &, donee
-            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>= doneee
-            {10, "PUNCTUATION"}, // {} () [] , ; . -> okiiii
-            {11, "LITERAL"}, //donee
-            {12, "LOGICAL_OP"}, //&&, ||, ! finee
-            {13, "BITWISE_OP"}, // |, ~, ^, <<, >> weeeee
-    };
-    auto it = tokenTypes.find(type);
-    if (it != tokenTypes.end()) {
-        return it->second;
-    } else {
-        return "UNKNOWN";
+    while(symbolTable[entry][0] != "") {
+        if (symbolTable[entry][0] == identifier) return -1;
+        entry++;
     }
+    return entry;
 }
-
-void readFromFile(const string& program, char buffer[]) {
-    static int loc = 0;
-    ifstream file(program, ios::binary);
-
-    // Check if the opening was successful
-    if (!file.is_open()) {
-        cerr << "Error opening file" << endl;
-    }
-
-    file.seekg(loc);
-    file.read(buffer, BUF_SIZE-1);
-
-    // Determine the number of characters read
-    streamsize bytesRead = file.gcount();
-
-    // update the location in the file
-    loc += bytesRead;
-
-    if (file.eof()) {
-        buffer[bytesRead] = EOF;
-    }
-
-    buffer[BUF_SIZE-1] = EOF;
-
-    file.close();
-}
-
-
-void printSymbolTable(){
-    cout << "Index\tKeyword\t\tType" << endl;
-    for (int i = 0; i < 32; i++)
-        cout << i << "\t" << symbolTable[i][0] << "\t\t" << symbolTable[i][1] << endl;
-}
-
-Token getNextToken(char* buffer1, char* buffer2) {
+----------------------------
+Token getNextToken(const char* buffer1, const char* buffer2) {
     static int STindex = 32;
     char *forward = buffer1, *start = buffer1;
     int state = 1, tokenIndex = 0, lexemeType = -1;
-    char c;
+	char c;
     bool eofFlag = false, retrackFlag = false;
     string lexeme;
-
-    while(1) {
+	
+	    while(1) {
         if (retrackFlag) {
             if (forward == buffer1)
                 forward = &buffer2[BUF_SIZE - 2];
@@ -574,13 +515,13 @@ Token getNextToken(char* buffer1, char* buffer2) {
         }
     }
 
-    if(state != 1){
+	if(state != 1){
         cerr << "token incomplete: ";
         while(start!= forward)
             cout<<start++;
         cout << endl;
-        //return -1;
+		return -1;
     }
-
+	
 }
 
