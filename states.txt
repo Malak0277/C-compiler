@@ -12,3 +12,5 @@ state 15-17 => operators
 state 18-19+26 => logical
 state 20-23 => comment
 state 24-25 => string
+state 26 => != or !
+state 27 => error

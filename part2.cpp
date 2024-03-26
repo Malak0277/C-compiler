@@ -6,7 +6,6 @@
 using namespace std;
 
 //Notes:
-// errors + final_state_digits
 //symbol table
 //dynamic arrays
 
@@ -16,7 +15,8 @@ char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 
 struct Token {
     string type;
-    string value;
+    string stringValue;
+    int intValue;
 };
 Token tokenArray[1000];		//one element = type + value	//DYNAMIC
 //Token* tokenArray = new Token[1000];
@@ -79,13 +79,14 @@ string getTokenType(int type) {
             {4, "OCT"},
             {5, "HEX"},
             {6, "RELOP"}, //>, <, >=, <=, <>, ==, !=
-            {7, "OPERATOR"}, //+, -, *, /, %, ++, --
-            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=
-            {9, "SEMICOLON"},
-            {10, "SEPERATOR"}, // {, }, (, ), [, ], ,,
-            {11, "STRING"},
+            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &,   
+            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
+            {10, "PUNCTUATION"}, // {} () [] , ; . ->
+            {11, "LITERAL"}, 
             {12, "LOGICAL_OP"}, //&&, ||, !
+            {13, "BITWISE_OP"}, // |, ~, ^, <<, >>
     };
+      
 
     auto it = tokenTypes.find(type);
     if (it != tokenTypes.end()) {
@@ -136,7 +137,7 @@ int main() {
     int state = 1, tokenIndex = 0;
     char c;
     bool eofFlag = false, retrackFlag = false;
-    char lexeme[100];
+    string lexeme;
     int lexemeType = -1;
 
     printSymbolTable();
@@ -153,6 +154,7 @@ int main() {
             retrackFlag = false;
         }
 
+        //get lexeme
         if (state == 1 && lexemeType != -1) {
             int i = 0;
             while (start != forward) {
@@ -162,26 +164,27 @@ int main() {
                     if (start == &buffer2[BUF_SIZE - 1])
                         start = buffer1;
                 }
-                lexeme[i++] = *start;
+                lexeme += *start;   
                 start++;
             }
-
-            tokenArray[tokenIndex].value = lexeme;
-            tokenArray[tokenIndex].type = getTokenType(lexemeType);
-
-            //I thought eno da mfrod hyb2a b3d el wile el kbera...
-            /*
-            if(lexemeType == 1){ //SYMBOL TABLE
-3amatn el code ely t7t hyet7at hna m3 eny msh 3yza :((
-            } else if(lexemeType == 9 ||  lexemeType == 11){
-
-            } else {
-                tokenArray[tokenIndex].value = getTokenType(lexemeType);
-            }
-            */
-
             tokenIndex++;
         } else if (state == 1) start = forward;
+
+            tokenArray[tokenIndex].type = getTokenType(lexemeType);
+            if(lexemeType == 1)
+              //Mariaaam 
+            ;
+            /*
+            1 - int - ptr
+            2/3/4/5 - int - number
+            6-12 - String - content
+            */
+            else if(lexemeType >= 2 || lexemeType <= 5)
+              tokenArray[tokenIndex].intValue = stoi(lexeme);
+            else if(lexemeType >= 6 || lexemeType <= 12)
+              tokenArray[tokenIndex].stringValue = lexeme;
+            
+
 
         if (*forward == EOF) {
             if (forward == &buffer1[BUF_SIZE - 1])
@@ -196,7 +199,7 @@ int main() {
         forward++;
         switch (state) {
             case 0:
-                if (isspace(c))
+                if (isspace(c)) 
                     state = 0;
                 else {
                     state = 1;
@@ -204,19 +207,19 @@ int main() {
                 }
             case 1:
                 if (isspace(c))
-                    state = 0;
+                    state = 0;   
                 else if (isalpha(c) || c == '_')
                     state = 2;
                 else if (isdigit(c))
                     state = 3;
                 else if (c == '/')
                     state = 20;
-                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',')
+                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || ';' || '[' || ']'||'.')
                     lexemeType = 10;
-                else if (c == ';')
-                    lexemeType = 9;
                 else if (c == '"')
                     state = 24;
+                else if (c == '\'')
+                    state = 25;
                 else if (c == '<')
                     state = 12;
                 else if (c == '>')
@@ -235,6 +238,8 @@ int main() {
                     state = 19;
                 else if (c == '!')
                     state = 26;
+                else
+                    state = 27;
                 break;
 
             case 2:
@@ -260,8 +265,8 @@ int main() {
                     state = 4;
                 else if (c == 'e' || c == 'E')
                     state = 5;
-                else if (isalpha(c))  //12d
-                    ;//state = ; //error
+                else if (isalpha(c)) 
+                    state = 27;
                 else {
                     lexemeType = 2;
                     retrackFlag = true;
@@ -274,8 +279,8 @@ int main() {
                     state = 4;
                 else if (c == 'e' || c == 'E')
                     state = 5;
-                else if (isalpha(c))  //12d
-                    ;//state = ; //error
+                else if (isalpha(c))  
+                    state = 27;
                 else {
                     lexemeType = 2;
                     retrackFlag = true;
@@ -288,20 +293,22 @@ int main() {
                     state = 7;
                 else if (c == '+' || c == '-')
                     state = 6;
-                else;//state = ; // error
+                else 
+                    state = 27;  
                 break;
-
+                   
             case 6:
                 if (isdigit(c))
                     state = 7;
-                else;//state = ; // error
+                else
+                    state = 27;
                 break;
 
             case 7:
                 if (isdigit(c))
                     state = 7;
-                else if (isalpha(c))  //12d
-                    ;//state = ; //error
+                else if (isalpha(c))  
+                    state = 27;
                 else {
                     lexemeType = 2;
                     retrackFlag = true;
@@ -316,7 +323,8 @@ int main() {
                     state = 10;
                 else if (isdigit(c))
                     state = 11;
-                else if (isalpha(c));//state = ; //error
+                else if (isalpha(c))
+                    state = 27;
                 else {
                     lexemeType = 2;
                     retrackFlag = true;
@@ -327,7 +335,8 @@ int main() {
             case 9:
                 if (c == '0' || c == '1')
                     state = 9;
-                else if (isalnum(c));//state = ; //error
+                else if (isalnum(c))
+                    state = 27;
                 else {
                     lexemeType = 3;
                     retrackFlag = true;
@@ -339,7 +348,8 @@ int main() {
                 if (isdigit(c) || c == 'A' || c == 'a' || c == 'B' || c == 'b' || c == 'C' || c == 'c'
                     || c == 'D' || c == 'd' || c == 'E' || c == 'e' || c == 'F' || c == 'f')
                     state = 10;
-                else if (isalpha(c));//state = ; //error
+                else if (isalpha(c))
+                    state = 27;
                 else {
                     lexemeType = 5;
                     retrackFlag = true;
@@ -348,10 +358,12 @@ int main() {
                 break;
 
             case 11:
-                if (c == '8' || c == '9');//state = ; //error
+                if (c == '8' || c == '9')
+                    state = 27; 
                 else if (isdigit(c))
                     state = 11;
-                else if (isalpha(c));//state = ; //error
+                else if (isalpha(c))   
+                    state = 27;
                 else {
                     lexemeType = 4;
                     retrackFlag = true;
@@ -432,6 +444,10 @@ int main() {
                     state = 8;
                 else if (isdigit(c))
                     state = 3;
+                else if(c == '>'){
+                     lexemeType = 10;
+                     state = 1;
+                }
                 else {
                     lexemeType = 7;
                     retrackFlag = true;
@@ -440,15 +456,15 @@ int main() {
                 break;
 
             case 18:
-                if (c == '&') {
-                    lexemeType = 12;
+                if (c == '&') {  
+                    lexemeType = 12;  
                     state = 1;
                 } else {
                     retrackFlag = true;
-                    //state = error;
+                    //state = error;   //not
                 }
                 break;
-
+                
             case 19:
                 if (c == '|') {
                     lexemeType = 12;
@@ -457,12 +473,13 @@ int main() {
                 retrackFlag = true;
                 //state = error;
                 }
-                break;
+                break; 
+            //^
 
             case 20:
                 if (c == '/')
                     state = 23;
-                else if (c == '*')
+                else if (c == '*')   
                     state = 21;
                 break;
 
@@ -486,18 +503,31 @@ int main() {
             case 23:
                 if (c == '/')
                     state = 23;
-                if (c == '\n') {  //////////////
-                    lexemeType = 0; //no token returned, just move the start
+                else if (c == '\n') {  //////////////
+                    lexemeType = -1; //no token returned, just move the start
                     state = 1;
                 }
                 break;
 
-            case 24: // string
-                if (isprint(c))
+          case 24: // string
+                if (c == '"') {
+                  lexemeType = 11;
+                  state = 1;
+                }
+                break;  //nothing will cause an error
+
+          case 25: // string
+                if (c == '\'') { //edit
+                  lexemeType = 11;
+                  state = 1;
+                }
+                break;  //nothing will cause an error
+
+        /*case 24: // string
+                if (isprint(c)) 
                     state = 25;
                 else;//state =; //error
                 break;
-
             case 25:
                 if (isprint(c))
                     state = 25;
@@ -506,6 +536,8 @@ int main() {
                     state = 1;
                 } else;//state =; //error
                 break;
+            */
+                
 
             case 26:
                 if (c == '=') {
@@ -517,9 +549,30 @@ int main() {
                     retrackFlag = true;
                 }
                 break;
-        }
-    }
 
+            case 27:   //Error state   
+              if(isspace(c)){//edit
+                char *temp = start;
+                cerr<<"invalid token: ";  //do we need to save it as a token?
+                while(temp != forward)
+                  cout<<temp++;
+                cout << endl;
+                state = 0;
+            break;
+            }
+    }
+  }
+  
+  if(state != 1){
+    cerr << "token incomplete: ";
+    while(start!= forward)
+        cout<<start++;
+    cout << endl;
+  }
+
+  cout << "end of file reached" <<endl;
+
+    
     //case token is id:
     int STindex = 32;
     for (int i = 0; i < tokenIndex; i++) {
