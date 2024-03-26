@@ -57,13 +57,13 @@ string getTokenType(int type) {
             {3, "BIN"},
             {4, "OCT"},
             {5, "HEX"},
-            {6, "RELOP"}, //>, <, >=, <=, <>, ==, !=
-            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &,
-            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
-            {10, "PUNCTUATION"}, // {} () [] , ; . ->
-            {11, "LITERAL"},
-            {12, "LOGICAL_OP"}, //&&, ||, !
-            {13, "BITWISE_OP"}, // |, ~, ^, <<, >>
+            {6, "RELOP"}, //>, <, >=, <=, <>, ==, != doneeeee
+            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, &, donee
+            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>= doneee
+            {10, "PUNCTUATION"}, // {} () [] , ; . -> okiiii
+            {11, "LITERAL"}, //donee
+            {12, "LOGICAL_OP"}, //&&, ||, ! finee
+            {13, "BITWISE_OP"}, // |, ~, ^, <<, >> weeeee
     };
 
 
@@ -146,7 +146,7 @@ int main() {
                 lexeme += *start;
                 start++;
             }
-            tokenIndex++;
+            
         } else if (state == 1) start = forward;
 
         tokenArray[tokenIndex].type = getTokenType(lexemeType);
@@ -162,6 +162,7 @@ int main() {
             tokenArray[tokenIndex].intValue = stoi(lexeme);
         else if(lexemeType >= 6 || lexemeType <= 12)
             tokenArray[tokenIndex].stringValue = lexeme;
+        tokenIndex++; 
 
 
 
@@ -184,6 +185,7 @@ int main() {
                     state = 1;
                     lexemeType = -1;
                 }
+                break;///////////3shan ytl3 yd5ol tany loop
             case 1:
                 if (isspace(c))
                     state = 0;
@@ -193,7 +195,7 @@ int main() {
                     state = 3;
                 else if (c == '/')
                     state = 20;
-                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || ';' || '[' || ']'||'.')
+                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || ';' || '[' || ']'||'.')// -> t7t m3 ba2y el minuses
                     lexemeType = 10;
                 else if (c == '"')
                     state = 24;
@@ -217,7 +219,13 @@ int main() {
                     state = 19;
                 else if (c == '!')
                     state = 26;
-                else
+                else if (c == '^')
+                    state = 28;
+                else if (c=='~')
+                    lexemeType=13;
+                else if (c=='?')
+                    state = 31;
+                else 
                     state = 27;
                 break;
 
@@ -351,10 +359,13 @@ int main() {
                 break;
 
             case 12:
-                if (c == '=') {
+                if (c == '='|c=='>') {
                     lexemeType = 6;
                     state = 1;
-                } else {
+                }
+                else if (c=='<') 
+                  state = 29;
+                else {
                     lexemeType = 6;
                     retrackFlag = true;
                     state = 1;
@@ -365,12 +376,16 @@ int main() {
                 if (c == '=') {
                     lexemeType = 6;
                     state = 1;
-                } else {
+                }
+                else if (c=='>') 
+                  state = 30;
+                else {
                     lexemeType = 6;
                     retrackFlag = true;
                     state = 1;
                 }
                 break;
+
 
             case 14:
                 if (c == '=') {
@@ -435,23 +450,23 @@ int main() {
                 break;
 
             case 18:
-                if (c == '&') {
+                if (c == '&') 
                     lexemeType = 12;
-                    state = 1;
-                } else {
+                else if(c=='=')
+                    lexemeType = 8;
+                else
                     retrackFlag = true;
-                    //state = error;   //not
-                }
+                state =1;
                 break;
 
             case 19:
                 if (c == '|') {
                     lexemeType = 12;
-                    state = 1;
-                } else {
+                } else if(c==0) 
+                    lexemeType = 8;
+                  else
                     retrackFlag = true;
-                    //state = error;
-                }
+                state = 1;
                 break;
                 //^
 
@@ -489,34 +504,21 @@ int main() {
                 break;
 
             case 24: // string
-                if (c == '"') {
-                    lexemeType = 11;
-                    state = 1;
+                if (c != '"') {
+                    state = 24;
                 }
-                break;  //nothing will cause an error
+                else
+                  lexemeType=11;
+                  state =1;
+                break; 
+              
 
-            case 25: // string
+            /*case 25: // string
                 if (c == '\'') { //edit
                     lexemeType = 11;
                     state = 1;
                 }
-                break;  //nothing will cause an error
-
-                /*case 24: // string
-                        if (isprint(c))
-                            state = 25;
-                        else;//state =; //error
-                        break;
-                    case 25:
-                        if (isprint(c))
-                            state = 25;
-                        else if (c == '"') {
-                            lexemeType = 11;
-                            state = 1;
-                        } else;//state =; //error
-                        break;
-                    */
-
+                break;  //nothing will cause an error*/
 
             case 26:
                 if (c == '=') {
@@ -539,6 +541,41 @@ int main() {
                     state = 0;
                     break;
                 }
+            case 28:
+                if(c=='=')
+                  lexemeType=8;
+                else
+                  retrackFlag = true;
+                state = 1;
+                break;
+            case 29:
+                if(c=='=')
+                  lexemeType=8;
+                else
+                  retrackFlag=true;
+                  lexemeType=13;
+                state=1;
+                break;
+            case 30:
+                if(c=='=')
+                  lexemeType=8;
+                else
+                  retrackFlag=true;
+                  lexemeType=13;
+                state=1;
+                break;
+            case 31:
+                if(c==':'){
+                  lexemeType=7;
+                  state =1;}
+                else{
+                  state = 27;
+                }
+                break;
+                
+            
+
+        
         }
     }
 
