@@ -225,6 +225,8 @@ int main() {
                     lexemeType=13;
                 else if (c=='?')
                     state = 31;
+                else if (c=='.')
+                    lexemeType=10;
                 else 
                     state = 27;
                 break;
