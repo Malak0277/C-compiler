@@ -12,12 +12,11 @@ struct Token {
     string stringValue;
     int intValue;
 };
-vector<Token> tokenArray;
 
 vector<string> symbolTable = {
-        "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
-        "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
-        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
+    "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
+    "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
+    "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
 };        //identifiers starts from index 32
 
 Token getNextToken(const char* buffer1, const char* buffer2);
@@ -29,8 +28,14 @@ void printSymbolTable();
 int main() {
     char buffer1[BUF_SIZE], buffer2[BUF_SIZE];      ////parameter
     readFromFile("../m.txt", buffer1);
-    getNextToken(buffer1, buffer2);
-
+    Token next = getNextToken(buffer1, buffer2);
+    vector<Token> tokenArray;						//while loop b2a wen push back hena
+    while (next.type != "") {
+        next = getNextToken(buffer1, buffer2);
+        tokenArray.push_back(next);
+    }
+    for (int i = 0; i < tokenArray.size(); i++)
+        cout << '<' << tokenArray[i].type << ", " << tokenArray[i].intValue << tokenArray[i].stringValue << "> ";
 //    printSymbolTable();
 //    cout << "end of file reached" << endl;
     return 0;
@@ -95,21 +100,21 @@ void readFromFile(const string& program, char buffer[]) {
     file.close();
 }
 
-
-void printSymbolTable(){
-    cout << "Index\tKeyword\t\tType" << endl;
-    for (int i = 0; i < 32; i++)
-        cout << i << "\t" << symbolTable[i][0] << "\t\t" << symbolTable[i][1] << endl;
+void printSymbolTable() {
+    cout << "Entry\t\tIdentifier" << endl;
+    for (int i = 32; i < symbolTable.size(); i++)
+        cout << i << "\t" << symbolTable[i] << endl;
 }
 
 Token getNextToken(char* buffer1, char* buffer2) {
     static int STindex = 32;
     char *forward = buffer1, *start = buffer1;
-    int state = 1, tokenIndex = 0, lexemeType = -1;
+    int state = 1, lexemeType = -1;
     char c;
     bool eofFlag = false, retrackFlag = false;
     string lexeme;
 
+    Token token;
     while(1) {
         if (retrackFlag) {
             if (forward == buffer1)
@@ -137,17 +142,18 @@ Token getNextToken(char* buffer1, char* buffer2) {
 
         } else if (state == 1) start = forward;
 
-        tokenArray[tokenIndex].type = getTokenType(lexemeType);
+        //tokenArray[tokenIndex].type = getTokenType(lexemeType);
+        token.type = getTokenType(lexemeType);
 
         if(lexemeType == 1) {
             int inTable = isInTable(lexeme);
             if (inTable >=0 && inTable < 32)
-                tokenArray[tokenIndex].type = "keyword";
+                token.type = "keyword";
             if (inTable < STindex)
-                tokenArray[tokenIndex].intValue = inTable;
+                token.intValue = inTable;
             else {
                 symbolTable[STindex] = lexeme;
-                tokenArray[tokenIndex].intValue = STindex++;
+                token.intValue = STindex++;
             }
         }
             /*
@@ -156,11 +162,10 @@ Token getNextToken(char* buffer1, char* buffer2) {
             6-12 - String - content
             */
         else if(lexemeType >= 2 || lexemeType <= 5)
-            tokenArray[tokenIndex].intValue = stoi(lexeme);
+            token.intValue = stoi(lexeme);
         else if(lexemeType >= 6 || lexemeType <= 12)
-            tokenArray[tokenIndex].stringValue = lexeme;
-        tokenIndex++;
-
+            token.stringValue = lexeme;
+//        tokenIndex++;
 
         if (*forward == EOF) {
             if (forward == &buffer1[BUF_SIZE - 1])
@@ -579,8 +584,6 @@ Token getNextToken(char* buffer1, char* buffer2) {
         while(start!= forward)
             cout<<start++;
         cout << endl;
-        //return -1;
     }
-
+    return token;
 }
-
