@@ -2,7 +2,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <map>
 using namespace std;
 
 const int BUF_SIZE = 4096;
@@ -42,7 +41,7 @@ int main() {
         next = getNextToken(buffer1, buffer2, &eofFlag);
     }
 
-//  printSymbolTable();
+    printSymbolTable();
     //cout << "end of file reached" << endl;
     return 0;
 }
@@ -85,13 +84,13 @@ string getTokenType(int type) {
         case 3: return "BIN"; break;
         case 4: return "OCT"; break;
         case 5: return "HEX"; break;
-        case 6: return "RELOP"; break;
-        case 7: return "OPERATOR"; break;
-        case 8: return "ASSIGNING_OP"; break;
-        case 10: return "PUNCTUATION"; break;
+        case 6: return "RELOP"; break; //>, <, >=, <=, <>, ==, !=
+        case 7: return "OPERATOR"; break; //+, -, *, /, %, ++, --,  ?:, &
+        case 8: return "ASSIGNING_OP"; break; //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
+        case 10: return "PUNCTUATION"; break; // {} () [] , ; . ->
         case 11: return "LITERAL"; break;
-        case 12: return "LOGICAL_OP"; break;
-        case 13: return "BITWISE_OP"; break;
+        case 12: return "LOGICAL_OP"; break; //&&, ||, !
+        case 13: return "BITWISE_OP"; break;  // |, ~, ^, <<, >>
         default: return "UNKNOWN"; break; // Handle the case if type is not found
     }
 }
@@ -147,6 +146,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 start++;
             }
 
+        
         switch (state) {
             case 0:
                 if (isspace(c))
@@ -154,6 +154,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 else {
                     state = 1;
                     lexemeType = -1; //to indicate that even though final state is reached(state 1) no token is going to be taken
+                    retrackFlag = true;
                 }
                 break;///////////3shan ytl3 yd5ol tany loop
             case 1:
@@ -167,8 +168,6 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                     state = 3;
                 else if (c == '/')
                     state = 20;
-                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || ';' || '[' || ']'||'.')// -> t7t m3 ba2y el minuses
-                    lexemeType = 10;
                 else if (c == '"')
                     state = 24;
                 else if (c == '\'')
@@ -199,8 +198,8 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                     lexemeType=7;
                 else if(c==':')
                     lexemeType=7;
-                else if (c=='.')
-                    lexemeType=10;
+                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || c == ';' || c == '[' || c == ']'|| c == '.')// -> t7t m3 ba2y el minuses
+                    lexemeType = 10;
                 else
                     state = 27;
                 break;
@@ -476,12 +475,12 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
             case 24: // string
                 if (c != '"')
                     state = 24;
-
-                if (c == '\\')
+                else if (c == '\\')
                     state = 33;
-                else
+                else{
                     lexemeType=11;
-                state =1;
+                    state =1;
+                }
                 break;
 
 
@@ -504,15 +503,18 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 break;
 
             case 27:   //Error state
-                if(!isalnum(c)){
+                if(isspace(c)){
                     char *temp = start;
-                    cerr<<"invalid token: ";  //do we need to save it as a token? (we are not)
-                    while(temp != forward)
-                        cout<<temp++;
-                    cout << endl;
+                    cerr<<"\nInvalid token: ";  //do we need to save it as a token? (we are not)
+                    while(!(isspace(*temp) || *temp == ';')){
+                        cout<<*temp;
+                        temp++;
+                    }
+                    cout << endl << endl;
                     state = 0;
-                    break;
+                    retrackFlag = true;
                 }
+                break;
             case 28:
                 if(c=='=')
                     lexemeType=8;
@@ -582,10 +584,12 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
     }
 
     //check if terminated before reaching final state
-    if(state != 1){
-        cerr << "token incomplete: ";
-        while(start!= forward)
-            cout<<start++;
+    if(state != 1 && state != 0){
+        cerr << "\nToken incomplete: ";
+        while(start!= forward){
+            cout<<*start;
+            start++;
+        }
         cout << endl;
         return token;
     }
@@ -607,8 +611,10 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
 
     if(lexemeType == 1) {  //keywords or identifier
         int inTable = isInTable(lexeme);
-        if (inTable >= 0 && inTable < 32) // keyword
+        if (inTable >= 0 && inTable < 32){ // keyword
             token.type = "keyword";
+            token.stringValue = lexeme;
+        }
         else if (inTable < STindex) // already existing identifier
             token.intValue = inTable;
         else { // new identifier
@@ -635,7 +641,9 @@ int isInTable(string identifier) {
 }
 
 void printSymbolTable() {
-    cout << "Entry\t\tIdentifier" << endl;
+    cout << endl;
+    cout << "Entry\tIdentifier" << endl;
+    cout << "------------------"<< endl;
     for (int i = 32; i < symbolTable.size(); i++)
         cout << i << "\t" << symbolTable[i] << endl;
 }
