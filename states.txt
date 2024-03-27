@@ -11,6 +11,14 @@ state 12-15 => relop
 state 15-17 => operators 
 state 18-19+26 => logical
 state 20-23 => comment
-state 24-25 => string
+state 24 => string
+state 25 => char
 state 26 => != or !
 state 27 => error
+state 28 => ^=
+state 29 => <<=
+state 30 => >>=
+state 31 => char
+state 32 => char
+state 33 => string
+
