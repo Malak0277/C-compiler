@@ -15,31 +15,36 @@ struct Token {
 };
 
 vector<string> symbolTable = {
-    "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
-    "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
-    "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"
+        "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
+        "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
+        "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
 };        //identifiers starts from index 32
 
-Token getNextToken(char* buffer1, char* buffer2);
+Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag);
 int isInTable(string identifier);
 string getTokenType(int type);
 void readFromFile(const string& program, char buffer[]);
 void printSymbolTable();
 
 int main() {
-  char buffer1[BUF_SIZE], buffer2[BUF_SIZE];      
-  readFromFile("test.cpp", buffer1);
-  Token next = getNextToken(buffer1, buffer2);
+    char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
+    readFromFile("../test.cpp", buffer1);
 
-  while (next.type != "") {
-      cout << '<' << next.type << ", " << next.intValue << next.stringValue << "> ";
-      next = getNextToken(buffer1, buffer2);
-    
-  }
+    bool eofFlag = 0;
+    Token next = getNextToken(buffer1, buffer2, &eofFlag);
 
-//printSymbolTable();
-  cout << "end of file reached" << endl;
-  return 0;
+    while (!eofFlag) {
+        if (next.stringValue == "")
+            cout << '<' << next.type << ", " << next.intValue << "> " << endl;
+        else
+            cout << '<' << next.type << ", " << next.stringValue << " > " << endl;
+        //cout << '<' << next.type << ", " << next.intValue << next.stringValue << "> ";
+        next = getNextToken(buffer1, buffer2, &eofFlag);
+    }
+
+//  printSymbolTable();
+    //cout << "end of file reached" << endl;
+    return 0;
 }
 
 
@@ -64,6 +69,7 @@ void readFromFile(const string& program, char buffer[]) {
 
     if (file.eof()) {
         buffer[bytesRead] = EOF;
+        //cout << "end of file reached" << endl;
     }
 
     buffer[BUF_SIZE-1] = EOF;
@@ -73,49 +79,26 @@ void readFromFile(const string& program, char buffer[]) {
 
 
 string getTokenType(int type) {
-  /*
-    static map<int, string> tokenTypes = {
-            {1, "ID"},
-            {2, "DEC"},
-            {3, "BIN"},
-            {4, "OCT"},
-            {5, "HEX"},
-            {6, "RELOP"}, //>, <, >=, <=, <>, ==, != 
-            {7, "OPERATOR"}, //+, -, *, /, %, ++, --,  ?:, & 
-            {8, "ASSIGNING_OP"}, //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>= 
-            {10, "PUNCTUATION"}, // {} () [] , ; . -> 
-            {11, "LITERAL"}, 
-            {12, "LOGICAL_OP"}, //&&, ||, ! 
-            {13, "BITWISE_OP"}, // |, ~, ^, <<, >> 
-    };
-    auto it = tokenTypes.find(type);
-    if (it != tokenTypes.end()) {
-        return it->second;
-    } else {
-        return "UNKNOWN";
-    }
-*/
     switch (type) {
-    case 1: return "ID"; break;
-    case 2: return "DEC"; break;
-    case 3: return "BIN"; break;
-    case 4: return "OCT"; break;
-    case 5: return "HEX"; break;
-    case 6: return "RELOP"; break;
-    case 7: return "OPERATOR"; break;
-    case 8: return "ASSIGNING_OP"; break;
-    case 10: return "PUNCTUATION"; break;
-    case 11: return "LITERAL"; break;
-    case 12: return "LOGICAL_OP"; break;
-    case 13: return "BITWISE_OP"; break;
-    default: return "UNKNOWN"; break; // Handle the case if type is not found 
+        case 1: return "ID"; break;
+        case 2: return "DEC"; break;
+        case 3: return "BIN"; break;
+        case 4: return "OCT"; break;
+        case 5: return "HEX"; break;
+        case 6: return "RELOP"; break;
+        case 7: return "OPERATOR"; break;
+        case 8: return "ASSIGNING_OP"; break;
+        case 10: return "PUNCTUATION"; break;
+        case 11: return "LITERAL"; break;
+        case 12: return "LOGICAL_OP"; break;
+        case 13: return "BITWISE_OP"; break;
+        default: return "UNKNOWN"; break; // Handle the case if type is not found
+    }
 }
 
-}
 
 
-
-Token getNextToken(char* buffer1, char* buffer2) {
+Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
     static int STindex = 32;
     static char *forward = buffer1, *start = buffer1; //buffer pointers
     int state = 1, lexemeType = -1;
@@ -125,42 +108,44 @@ Token getNextToken(char* buffer1, char* buffer2) {
 
     Token token;
 
-      //handling the states
-      do{
+    //handling the states
+    do{
 
         //retrack forward pointer --duplicated
-        if (retrackFlag) { 
-          if (forward == buffer1)
-              forward = &buffer2[BUF_SIZE - 2];
-          else if (forward == buffer2)
-              forward = &buffer1[BUF_SIZE - 2];
-          else
-              forward--;
-          retrackFlag = false;
+        if (retrackFlag) {
+            if (forward == buffer1)
+                forward = &buffer2[BUF_SIZE - 2];
+            else if (forward == buffer2)
+                forward = &buffer1[BUF_SIZE - 2];
+            else
+                forward--;
+            retrackFlag = false;
         }
 
         //advancing forward ptr when meeting EOF
         if (*forward == EOF) {
-          if (forward == &buffer1[BUF_SIZE - 1])
-              readFromFile("test.cpp", buffer2);
-          else if (forward == &buffer2[BUF_SIZE - 1])
-              readFromFile("test.cpp", buffer1);
-          else
-              break;
-        } 
+            if (forward == &buffer1[BUF_SIZE - 1])
+                readFromFile("test.cpp", buffer2);
+            else if (forward == &buffer2[BUF_SIZE - 1])
+                readFromFile("test.cpp", buffer1);
+            else {
+                *eofFlag = true;
+                break;
+            }
+        }
 
-        
+
         c = *forward;
         if(state == 1 && lexemeType == -1)  //that token is going to be ignored
-          while (start != forward) { //--"almost" duplicated
-          if (*start == EOF) {
-              if (start == &buffer1[BUF_SIZE - 1])
-                  start = buffer2;
-              if (start == &buffer2[BUF_SIZE - 1])
-                  start = buffer1;
-          }
-          start++;
-      }
+            while (start != forward) { //--"almost" duplicated
+                if (*start == EOF) {
+                    if (start == &buffer1[BUF_SIZE - 1])
+                        start = buffer2;
+                    if (start == &buffer2[BUF_SIZE - 1])
+                        start = buffer1;
+                }
+                start++;
+            }
 
         switch (state) {
             case 0:
@@ -489,9 +474,9 @@ Token getNextToken(char* buffer1, char* buffer2) {
                 break;
 
             case 24: // string
-                if (c != '"') 
+                if (c != '"')
                     state = 24;
-                
+
                 if (c == '\\')
                     state = 33;
                 else
@@ -501,11 +486,11 @@ Token getNextToken(char* buffer1, char* buffer2) {
 
 
             case 25: // char
-                if (c == '\'') 
-                  state = 27;
+                if (c == '\'')
+                    state = 27;
                 else
-                  state = 31;
-                break;  
+                    state = 31;
+                break;
 
             case 26:
                 if (c == '=') {
@@ -556,97 +541,97 @@ Token getNextToken(char* buffer1, char* buffer2) {
                 state=1;
                 break;
 
-            case 31:  
+            case 31:
                 if (c == '\''){
-                  state = 1;
-                  lexemeType = 11;
+                    state = 1;
+                    lexemeType = 11;
                 }
                 else if(isspace(c))
-                  state = 32;
+                    state = 32;
                 else
-                  state = 27;
-                break;  
-            
-            case 32:  
+                    state = 27;
+                break;
+
+            case 32:
                 if (c == '\''){
-                  state = 1;
-                  lexemeType = 11;
+                    state = 1;
+                    lexemeType = 11;
                 }
                 else
-                  state = 27;
-                break;  
-            
+                    state = 27;
+                break;
+
             case 33:
                 state = 24;
                 break;
 
         }
-      
-        forward++;
-      }while(state != 1 || lexemeType == -1);
 
-      //retrack forward pointer --duplicated
-        if (retrackFlag) { 
-          if (forward == buffer1)
-              forward = &buffer2[BUF_SIZE - 2];
-          else if (forward == buffer2)
-              forward = &buffer1[BUF_SIZE - 2];
-          else
-              forward--;
-          retrackFlag = false;
-        }
-        
-      //check if terminated before reaching final state
-      if(state != 1){
+        forward++;
+    } while(state != 1 || lexemeType == -1);
+
+    //retrack forward pointer --duplicated
+    if (retrackFlag) {
+        if (forward == buffer1)
+            forward = &buffer2[BUF_SIZE - 2];
+        else if (forward == buffer2)
+            forward = &buffer1[BUF_SIZE - 2];
+        else
+            forward--;
+        retrackFlag = false;
+    }
+
+    //check if terminated before reaching final state
+    if(state != 1){
         cerr << "token incomplete: ";
         while(start!= forward)
             cout<<start++;
         cout << endl;
         return token;
-      }
+    }
 
 
-      //get lexeme
-      while (start != forward) { //--duplicated
-          if (*start == EOF) {
-              if (start == &buffer1[BUF_SIZE - 1])
-                  start = buffer2;
-              if (start == &buffer2[BUF_SIZE - 1])
-                  start = buffer1;
-          }
-          lexeme += *start;
-          start++;
-      }
+    //get lexeme
+    while (start != forward) { //--duplicated
+        if (*start == EOF) {
+            if (start == &buffer1[BUF_SIZE - 1])
+                start = buffer2;
+            if (start == &buffer2[BUF_SIZE - 1])
+                start = buffer1;
+        }
+        lexeme += *start;
+        start++;
+    }
 
-      token.type = getTokenType(lexemeType);
+    token.type = getTokenType(lexemeType);
 
-      if(lexemeType == 1) {  //keywords or identifier
-          int inTable = isInTable(lexeme);
-          if (inTable >=0 && inTable < 32) // keyword
-              token.type = "keyword";
-          else if (inTable < STindex) // already existing identifier 
-              token.intValue = inTable;
-          else { // new identifier
-              symbolTable[STindex] = lexeme;
-              token.intValue = STindex++;
-          }
-      }
-      else if(lexemeType >= 2 && lexemeType <= 5) //number
-          token.intValue = stoi(lexeme);
-      else if(lexemeType >= 6 && lexemeType <= 12) //others
-          token.stringValue = lexeme;
+    if(lexemeType == 1) {  //keywords or identifier
+        int inTable = isInTable(lexeme);
+        if (inTable >= 0 && inTable < 32) // keyword
+            token.type = "keyword";
+        else if (inTable < STindex) // already existing identifier
+            token.intValue = inTable;
+        else { // new identifier
+            symbolTable.push_back(lexeme);
+            token.intValue = STindex++;
+        }
+    }
+    else if(lexemeType >= 2 && lexemeType <= 5) //number
+        token.intValue = stoi(lexeme);
+    else if(lexemeType >= 6 && lexemeType <= 12) //others
+        token.stringValue = lexeme;
     return token;
 
 }
 
-    
-
 
 int isInTable(string identifier) {
     int entry = 0;
-    while(symbolTable[entry] != "")
-        if (symbolTable[entry++] == identifier) return -1;	//-1 means exist
-    return entry;			//index to insert in
+    while(entry < symbolTable.size()) {
+        if (symbolTable[entry] == identifier) break;
+        entry++;
+    }
+    return entry;
 }
 
 void printSymbolTable() {
