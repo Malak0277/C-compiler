@@ -4,7 +4,10 @@
 #include <vector>
 using namespace std;
 
+//Global variables
 const int BUF_SIZE = 4096;
+char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
+string fileLoc = "../test.cpp";
 
 
 struct Token {
@@ -20,14 +23,13 @@ vector<string> symbolTable = {
 };        //identifiers starts from index 32
 
 Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag);
-int isInTable(string identifier);
+int inSymbolTable(string identifier);
 string getTokenType(int type);
 void readFromFile(const string& program, char buffer[]);
 void printSymbolTable();
 
 int main() {
-    char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
-    readFromFile("../test.cpp", buffer1);
+    readFromFile(fileLoc, buffer1);
 
     bool eofFlag = 0;
     Token next = getNextToken(buffer1, buffer2, &eofFlag);
@@ -58,6 +60,7 @@ void readFromFile(const string& program, char buffer[]) {
     // Check if the opening was successful
     if (!file.is_open()) {
         cerr << "Error opening file" << endl;
+        exit(0);
     }
 
     file.seekg(loc); //start reading from last location
@@ -99,58 +102,33 @@ string getTokenType(int type) {
 }
 
 
+void retrack(bool &retrackFlag, char*& forward){
+    if (forward == buffer1)
+        forward = &buffer2[BUF_SIZE - 2];
+    else if (forward == buffer2)
+        forward = &buffer1[BUF_SIZE - 2];
+    else
+        forward--;
+    retrackFlag = false;
+}
 
-Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
-    static int STindex = 32;
-    static char *forward = buffer1, *start = buffer1; //buffer pointers
-    int state = 1, lexemeType = -1;
-    char c;
-    bool retrackFlag = false;
+string getLexeme(char*& start, char *forward){
     string lexeme;
+    while (start != forward) { 
+    if (*start == EOF) {
+        if (start == &buffer1[BUF_SIZE - 1])
+            start = buffer2;
+        if (start == &buffer2[BUF_SIZE - 1])
+            start = buffer1;
+    }
+    lexeme += *start;
+    start++;
+    }
+    return lexeme;
+}
 
-    Token token;
-
-    //handling the states
-    do{
-
-        //retrack forward pointer --duplicated
-        if (retrackFlag) {
-            if (forward == buffer1)
-                forward = &buffer2[BUF_SIZE - 2];
-            else if (forward == buffer2)
-                forward = &buffer1[BUF_SIZE - 2];
-            else
-                forward--;
-            retrackFlag = false;
-        }
-
-        //advancing forward ptr when meeting EOF
-        if (*forward == EOF) {
-            if (forward == &buffer1[BUF_SIZE - 1])
-                readFromFile("test.cpp", buffer2);
-            else if (forward == &buffer2[BUF_SIZE - 1])
-                readFromFile("test.cpp", buffer1);
-            else {
-                *eofFlag = true;
-                break;
-            }
-        }
-
-
-        c = *forward;
-        if(state == 1 && lexemeType == -1)  //that token is going to be ignored
-            while (start != forward) { //--"almost" duplicated
-                if (*start == EOF) {
-                    if (start == &buffer1[BUF_SIZE - 1])
-                        start = buffer2;
-                    if (start == &buffer2[BUF_SIZE - 1])
-                        start = buffer1;
-                }
-                start++;
-            }
-
-        
-        switch (state) {
+void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start){
+    switch(state) {
             case 0:
                 if (isspace(c))
                     state = 0;
@@ -521,7 +499,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 if(isspace(c) || c == ';'){
                     char *temp = start;
                     cerr<<"\nInvalid token: ";  //do we need to save it as a token? (we are not)
-                    while(!(isspace(*temp) || *temp == ';')){
+                    while(*temp != c){
                         cout<<*temp;
                         temp++;
                     }
@@ -580,48 +558,19 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
 
         }
 
-        forward++;
-    } while(state != 1 || lexemeType == -1);
-
-    //retrack forward pointer --duplicated
-    if (retrackFlag) {
-        if (forward == buffer1)
-            forward = &buffer2[BUF_SIZE - 2];
-        else if (forward == buffer2)
-            forward = &buffer1[BUF_SIZE - 2];
-        else
-            forward--;
-        retrackFlag = false;
-    }
-
-    //check if terminated before reaching final state
-    if(!(state == 1 || state == 0 || state == 23)){
-        cerr << "\nToken incomplete: ";
-        while(start!= forward){
-            cout<<*start;
-            start++;
-        }
-        cout << endl;
-        return token;
-    }
-
-
+}
+Token tokenize(char *start, char* forward, int lexemeType){
+    static int STindex = 32;
     //get lexeme
-    while (start != forward) { //--duplicated
-        if (*start == EOF) {
-            if (start == &buffer1[BUF_SIZE - 1])
-                start = buffer2;
-            if (start == &buffer2[BUF_SIZE - 1])
-                start = buffer1;
-        }
-        lexeme += *start;
-        start++;
-    }
+    string lexeme = getLexeme(start, forward);
+    Token token;
 
     token.type = getTokenType(lexemeType);
-
+    token.stringValue = "";
+    token.intValue = 0;
+    
     if(lexemeType == 1) {  //keywords or identifier
-        int inTable = isInTable(lexeme);
+        int inTable = inSymbolTable(lexeme);
         if (inTable >= 0 && inTable < 32){ // keyword
             token.type = "keyword";
             token.stringValue = lexeme;
@@ -637,12 +586,65 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
         token.intValue = stoi(lexeme);
     else if(lexemeType >= 6 && lexemeType <= 12) //others
         token.stringValue = lexeme;
+
     return token;
+}
+Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
+    static char *forward = buffer1, *start = buffer1; //buffer pointers
+    int state = 1, lexemeType = -1;
+    char c;
+    bool retrackFlag = false;
+  
+    //handling the states
+    do{
+        //advancing forward ptr when meeting EOF
+        if (*forward == EOF) {
+            if (forward == &buffer1[BUF_SIZE - 1])
+                readFromFile(fileLoc, buffer2);
+            else if (forward == &buffer2[BUF_SIZE - 1])
+                readFromFile(fileLoc, buffer1);
+            else {
+                *eofFlag = true;
+                break;
+            }
+        }
+        c = *forward;
+        if(state == 1 && lexemeType == -1)  //that token is going to be ignored
+            string dump = getLexeme(start, forward);
+            
+        getState(c, state, lexemeType, retrackFlag, start);
+
+        if(!retrackFlag)
+            forward++;  
+        else
+            retrackFlag = false;
+        
+
+    }while(state != 1 || lexemeType == -1);
+
+
+    //check if terminated before reaching final state
+    if(!(state == 1 || state == 0 || state == 23)){
+        cerr << "\nToken incomplete: ";
+        while(start!= forward){
+            cout<<*start;
+            start++;
+        }
+        cout << endl;
+        Token token;
+        return token;
+    }
+
+    return tokenize(start, forward, lexemeType);
 
 }
 
 
-int isInTable(string identifier) {
+
+
+
+
+int inSymbolTable(string identifier) {
     int entry = 0;
     while(entry < symbolTable.size()) {
         if (symbolTable[entry] == identifier) break;
