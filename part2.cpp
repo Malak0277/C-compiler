@@ -36,8 +36,11 @@ int main() {
         if (next.stringValue == "")
             cout << '<' << next.type << ", " << next.intValue << "> " << endl;
         else
-            cout << '<' << next.type << ", " << next.stringValue << " > " << endl;
-        //cout << '<' << next.type << ", " << next.intValue << next.stringValue << "> ";
+            if(next.type == "keyword" || next.type == "LITERAL")
+                cout << "<" << next.type << ", " << next.stringValue << "> " << endl;
+            else
+                cout << "<" << next.type << ", " << next.stringValue << " > " << endl;
+
         next = getNextToken(buffer1, buffer2, &eofFlag);
     }
 
@@ -85,9 +88,9 @@ string getTokenType(int type) {
         case 4: return "OCT"; break;
         case 5: return "HEX"; break;
         case 6: return "RELOP"; break; //>, <, >=, <=, <>, ==, !=
-        case 7: return "OPERATOR"; break; //+, -, *, /, %, ++, --,  ?:, &
+        case 7: return "OPERATOR"; break; //+, -, *, /, %, ++, --,  ?:, &, ->, .
         case 8: return "ASSIGNING_OP"; break; //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
-        case 10: return "PUNCTUATION"; break; // {} () [] , ; . ->
+        case 10: return "PUNCTUATION"; break; // {} () [] , ; 
         case 11: return "LITERAL"; break;
         case 12: return "LOGICAL_OP"; break; //&&, ||, !
         case 13: return "BITWISE_OP"; break;  // |, ~, ^, <<, >>
@@ -178,7 +181,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                     state = 13;
                 else if (c == '=')
                     state = 14;
-                else if (c == '*' || c == '/' || c == '%')
+                else if (c == '*' || c == '%')
                     state = 15;
                 else if (c == '+')
                     state = 16;
@@ -198,8 +201,10 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                     lexemeType=7;
                 else if(c==':')
                     lexemeType=7;
-                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || c == ';' || c == '[' || c == ']'|| c == '.')// -> t7t m3 ba2y el minuses
+                else if (c == '{' || c == '}' || c == '(' || c == ')' || c == ',' || c == ';' || c == '[' || c == ']')
                     lexemeType = 10;
+                else if(c == '.')
+                    lexemeType = 7;
                 else
                     state = 27;
                 break;
@@ -408,7 +413,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 else if (isdigit(c))
                     state = 3;
                 else if(c == '>'){
-                    lexemeType = 10;
+                    lexemeType = 7;
                     state = 1;
                 }
                 else {
@@ -423,27 +428,35 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                     lexemeType = 12;
                 else if(c=='=')
                     lexemeType = 8;
-                else
+                else{
+                    lexemeType = 7;
                     retrackFlag = true;
+                }
                 state =1;
                 break;
 
             case 19:
                 if (c == '|') {
                     lexemeType = 12;
-                } else if(c==0)
+                } else if(c=='=')
                     lexemeType = 8;
-                else
+                else{
+                    lexemeType = 13;
                     retrackFlag = true;
+                }
                 state = 1;
                 break;
-                //^
+                
 
             case 20:
                 if (c == '/')
                     state = 23;
                 else if (c == '*')
                     state = 21;
+                else{
+                    retrackFlag = true; 
+                    state = 15; //going to be treated as divide operator and not a comment
+                }
                 break;
 
             case 21:
@@ -466,7 +479,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
             case 23:
                 if (c == '/')
                     state = 23;
-                else if (c == '\n') {  //////////////
+                else if (c == '\n') {  
                     lexemeType = -1; //no token returned, just move the start
                     state = 1;
                 }
@@ -487,8 +500,10 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
             case 25: // char
                 if (c == '\'')
                     state = 27;
-                else
+                else if(c == '\\')
                     state = 31;
+                else
+                    state = 32;
                 break;
 
             case 26:
@@ -503,7 +518,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 break;
 
             case 27:   //Error state
-                if(isspace(c)){
+                if(isspace(c) || c == ';'){
                     char *temp = start;
                     cerr<<"\nInvalid token: ";  //do we need to save it as a token? (we are not)
                     while(!(isspace(*temp) || *temp == ';')){
@@ -544,11 +559,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
                 break;
 
             case 31:
-                if (c == '\''){
-                    state = 1;
-                    lexemeType = 11;
-                }
-                else if(isspace(c))
+                if (c == 'n' || c == 't' || c == 'r' || c == '\'' || c == '\"' || c == '\\' || c == '0' || c == 'a' || c == 'b' || c == 'f' || c == 'v') 
                     state = 32;
                 else
                     state = 27;
@@ -584,7 +595,7 @@ Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
     }
 
     //check if terminated before reaching final state
-    if(state != 1 && state != 0){
+    if(!(state == 1 || state == 0 || state == 23)){
         cerr << "\nToken incomplete: ";
         while(start!= forward){
             cout<<*start;

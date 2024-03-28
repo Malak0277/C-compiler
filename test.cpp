@@ -1,5 +1,7 @@
+#include <stdio.h>
 
-int x = 5@; // '@' is not a valid character in C identifiers
-char escape = '\g'; // Invalid escape sequence
-
-char str[] = "Hello; // Missing closing double quote
+int main() {
+    int x = 10;
+    printf("Hello, World!\n");
+    return 0; . -> ? && {-=}
+}
