@@ -615,11 +615,11 @@ Token tokenize(string lexeme, int lexemeType){
             token.type = "keyword";
             token.stringValue = lexeme;
         }
-        else if (inTable < symbolTable.size()-1) // already existing identifier
+        else if (inTable < symbolTable.size()) // already existing identifier
             token.intValue = inTable;
         else { // new identifier
+            token.intValue = symbolTable.size();
             symbolTable.push_back(lexeme);
-            token.intValue = symbolTable.size()-1;
         }
     }
         //Numbers
