@@ -165,7 +165,7 @@ Token getNextToken() {
 
 }
 
-void getState(char c, int &state, int &lexemeType, bool &retrackFlag){  //Hager
+void getState(char c, int &state, int &lexemeType, bool &retrackFlag){  
     switch(state) {
             case 0:
                 if (isspace(c))
@@ -529,7 +529,7 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag){  //Hager
 
             case 27:   //Error state
                 if(isspace(c) || c == ';'){
-                    state = -1; //erros indicator for lexeme to get discarded
+                    state = -1; //error indicator for lexeme to get discarded
                     retrackFlag = true;
                 }
                 break;
