@@ -27,7 +27,7 @@ string getTokenType(int);
 Token getNextToken();
 void getState(char, int &, int &, bool &);
 string getLexeme(char*&, char *);
-Token tokenize(char*, char*, int);
+Token tokenize(string, int);
 int inSymbolTable(string);
 void printSymbolTable();
 
@@ -147,21 +147,19 @@ Token getNextToken() {
         
     }while(state != 1 || lexemeType == -1);
 
+    string lexeme = getLexeme(start, forward);
 
     //check if terminated before reaching final state
     if(!(state == 1 || state == 0 || state == 23)){
         cerr << "\nToken incomplete: ";
-        while(start!= forward){
-            cout<<*start;
-            start++;
-        }
-        cout << endl;
+        cout << lexeme << endl;
         Token token;
         token.type = "UNKNOWN";
         return token;
     }
 
-    return tokenize(start, forward, lexemeType);
+    
+    return tokenize(lexeme, lexemeType);
 
 }
 
@@ -602,10 +600,9 @@ string getLexeme(char*& start, char *forward){
     return lexeme;
 }
 
-Token tokenize(char *start, char* forward, int lexemeType){
+Token tokenize(string lexeme, int lexemeType){
     static int STindex = 32;
     Token token;
-    string lexeme = getLexeme(start, forward);
 
     if(lexemeType >= 2 && lexemeType <= 5)
         token.type = "NUM";
