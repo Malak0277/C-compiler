@@ -7,7 +7,7 @@ using namespace std;
 //Global variables
 const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
-string fileLoc = "../test.cpp";
+string fileLoc = "test.cpp";
 
 struct Token {
     string type;
@@ -88,7 +88,7 @@ string getTokenType(int type) {
         case 3: return "BIN"; break;
         case 4: return "OCT"; break;
         case 5: return "HEX"; break;
-        case 6: return "RELOP"; break; //>, <, >=, <=, <>, ==, !=
+        case 6: return "RELOP"; break; //>, <, >=, <=, ==, !=
         case 7: return "OPERATOR"; break; //+, -, *, /, %, ++, --,  ?:, &, ->, .
         case 8: return "ASSIGNING_OP"; break; //=, +=, -=, *=, /=. %=, &=, |=, ^=, <<=, >>=
         case 10: return "PUNCTUATION"; break; // {} () [] , ; 
@@ -110,7 +110,7 @@ Token getNextToken() {
         c = *forward;
 
         //dump comments and whitespaces
-        if(state == 1 && lexemeType == -1) 
+        if(state == 1 && lexemeType == -1 && start != forward) 
             string dump = getLexeme(start, forward);
             
         getState(c, state, lexemeType, retrackFlag);
@@ -125,7 +125,8 @@ Token getNextToken() {
         if(retrackFlag)
             retrackFlag = false;
         else{
-            forward++; 
+            if(*forward != EOF)
+                forward++; 
             //advancing forward ptr when meeting EOF
             if (*forward == EOF) {
                 if (forward == &buffer1[BUF_SIZE - 1]){
@@ -139,7 +140,7 @@ Token getNextToken() {
                 else {
                     break;
                 }
-            //ok. 
+            
             } 
         }
         
@@ -156,6 +157,7 @@ Token getNextToken() {
         }
         cout << endl;
         Token token;
+        token.type = "UNKNOWN";
         return token;
     }
 
@@ -219,6 +221,8 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag){  //Hager
                     lexemeType = 10;
                 else if(c == '.')
                     lexemeType = 7;
+                else if(c == EOF)
+                    break;
                 else
                     state = 27;
                 break;
@@ -603,7 +607,10 @@ Token tokenize(char *start, char* forward, int lexemeType){
     Token token;
     string lexeme = getLexeme(start, forward);
 
-    token.type = getTokenType(lexemeType);
+    if(lexemeType >= 2 && lexemeType <= 5)
+        token.type = "NUM";
+    else
+        token.type = getTokenType(lexemeType);
 
     if(lexemeType == 1) {  //keywords or identifier
         int inTable = inSymbolTable(lexeme); //get position in symbol table
@@ -619,9 +626,19 @@ Token tokenize(char *start, char* forward, int lexemeType){
             token.intValue = STindex++;
         }
     }
-    else if(lexemeType >= 2 && lexemeType <= 5) //number
+    //Numbers
+    else if(lexemeType == 2){ //dec 
         token.intValue = stoi(lexeme);
-    else if(lexemeType >= 6 && lexemeType <= 12) //others
+    } 
+    else if(lexemeType == 3){ //bin
+        const char* charPtr = &lexeme[2];
+        token.intValue = stoi(charPtr, NULL, 2);
+    } 
+    else if(lexemeType == 4 || lexemeType == 5){ //oct + hex
+        const char* charPtr = &lexeme[0];
+        token.intValue = stoi(charPtr, NULL, 0);
+    }
+    else if(lexemeType >= 6 && lexemeType <= 13) //others
         token.stringValue = lexeme;
 
     return token;
@@ -637,6 +654,7 @@ int inSymbolTable(string identifier) {
 }
 
 void printSymbolTable() {
+    if (symbolTable.size() == 32) return;
     cout << endl;
     cout << "Entry\tIdentifier" << endl;
     cout << "------------------"<< endl;
