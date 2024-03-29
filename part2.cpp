@@ -9,7 +9,6 @@ const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
 string fileLoc = "../test.cpp";
 
-
 struct Token {
     string type;
     string stringValue;
@@ -20,21 +19,24 @@ vector<string> symbolTable = {
         "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
         "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
         "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
-};        //identifiers starts from index 32
+};        //identifiers start from index 32
 
-Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag);
-int inSymbolTable(string identifier);
-string getTokenType(int type);
-void readFromFile(const string& program, char buffer[]);
+//prototypes
+void readFromFile(const string&, char[]);
+string getTokenType(int);
+Token getNextToken();
+void getState(char, int &, int &, bool &);
+string getLexeme(char*&, char *);
+Token tokenize(char*, char*, int);
+int inSymbolTable(string);
 void printSymbolTable();
 
 int main() {
     readFromFile(fileLoc, buffer1);
 
-    bool eofFlag = 0;
-    Token next = getNextToken(buffer1, buffer2, &eofFlag);
+    Token next = getNextToken();
 
-    while (!eofFlag) {
+    while (next.type != "UNKNOWN") { 
         if (next.stringValue == "")
             cout << '<' << next.type << ", " << next.intValue << "> " << endl;
         else
@@ -43,14 +45,12 @@ int main() {
             else
                 cout << "<" << next.type << ", " << next.stringValue << " > " << endl;
 
-        next = getNextToken(buffer1, buffer2, &eofFlag);
+        next = getNextToken();
     }
 
     printSymbolTable();
-    //cout << "end of file reached" << endl;
     return 0;
 }
-
 
 
 void readFromFile(const string& program, char buffer[]) {
@@ -74,14 +74,12 @@ void readFromFile(const string& program, char buffer[]) {
 
     if (file.eof()) {
         buffer[bytesRead] = EOF;
-        //cout << "end of file reached" << endl;
     }
 
-    buffer[BUF_SIZE-1] = EOF;
+    buffer[BUF_SIZE-1] = EOF; //place sentinels at buffer end
 
     file.close();
 }
-
 
 string getTokenType(int type) {
     switch (type) {
@@ -101,33 +99,71 @@ string getTokenType(int type) {
     }
 }
 
+Token getNextToken() {
+    static char *forward = buffer1, *start = buffer1; //buffer pointers
+    int state = 1, lexemeType = -1;
+    char c;
+    bool retrackFlag = false;
+  
+    //handling the states
+    do{
+        c = *forward;
 
-void retrack(bool &retrackFlag, char*& forward){
-    if (forward == buffer1)
-        forward = &buffer2[BUF_SIZE - 2];
-    else if (forward == buffer2)
-        forward = &buffer1[BUF_SIZE - 2];
-    else
-        forward--;
-    retrackFlag = false;
+        //dump comments and whitespaces
+        if(state == 1 && lexemeType == -1) 
+            string dump = getLexeme(start, forward);
+            
+        getState(c, state, lexemeType, retrackFlag);
+
+        if(state == -1){ //error state
+            cerr<<"\nInvalid token: ";  //do we need to save it as a token? (we are not)
+            cout << getLexeme(start, forward) << endl << endl;
+            state = 1; //back to initial state
+        }
+        
+        //retrack forward ptr
+        if(retrackFlag)
+            retrackFlag = false;
+        else{
+            forward++; 
+            //advancing forward ptr when meeting EOF
+            if (*forward == EOF) {
+                if (forward == &buffer1[BUF_SIZE - 1]){
+                    readFromFile(fileLoc, buffer2);
+                    forward = buffer2;
+                }
+                else if (forward == &buffer2[BUF_SIZE - 1]){
+                    readFromFile(fileLoc, buffer1);
+                    forward = buffer1;
+                }
+                else {
+                    break;
+                }
+            //ok. 
+            } 
+        }
+        
+        
+    }while(state != 1 || lexemeType == -1);
+
+
+    //check if terminated before reaching final state
+    if(!(state == 1 || state == 0 || state == 23)){
+        cerr << "\nToken incomplete: ";
+        while(start!= forward){
+            cout<<*start;
+            start++;
+        }
+        cout << endl;
+        Token token;
+        return token;
+    }
+
+    return tokenize(start, forward, lexemeType);
+
 }
 
-string getLexeme(char*& start, char *forward){
-    string lexeme;
-    while (start != forward) { 
-    if (*start == EOF) {
-        if (start == &buffer1[BUF_SIZE - 1])
-            start = buffer2;
-        if (start == &buffer2[BUF_SIZE - 1])
-            start = buffer1;
-    }
-    lexeme += *start;
-    start++;
-    }
-    return lexeme;
-}
-
-void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start){
+void getState(char c, int &state, int &lexemeType, bool &retrackFlag){  //Hager
     switch(state) {
             case 0:
                 if (isspace(c))
@@ -137,7 +173,7 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
                     lexemeType = -1; //to indicate that even though final state is reached(state 1) no token is going to be taken
                     retrackFlag = true;
                 }
-                break;///////////3shan ytl3 yd5ol tany loop
+                break;
             case 1:
                 if (isspace(c))
                     state = 0;
@@ -368,10 +404,7 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
                 } else if (c == '=') {
                     lexemeType = 8;
                     state = 1;
-                } else if (c == '0')
-                    state = 8;
-                else if (isdigit(c))
-                    state = 3;
+                }
                 else {
                     lexemeType = 7;
                     retrackFlag = true;
@@ -386,10 +419,7 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
                 } else if (c == '=') {
                     lexemeType = 8;
                     state = 1;
-                } else if (c == '0')
-                    state = 8;
-                else if (isdigit(c))
-                    state = 3;
+                } 
                 else if(c == '>'){
                     lexemeType = 7;
                     state = 1;
@@ -455,22 +485,20 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
                 break;
 
             case 23:
-                if (c == '/')
-                    state = 23;
-                else if (c == '\n') {  
+                if (c == '\n') {  
                     lexemeType = -1; //no token returned, just move the start
                     state = 1;
                 }
                 break;
 
             case 24: // string
-                if (c != '"')
-                    state = 24;
-                else if (c == '\\')
+                if (c == '\\')
                     state = 33;
+                else if (c != '"')
+                    state = 24;
                 else{
                     lexemeType=11;
-                    state =1;
+                    state = 1;
                 }
                 break;
 
@@ -497,14 +525,7 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
 
             case 27:   //Error state
                 if(isspace(c) || c == ';'){
-                    char *temp = start;
-                    cerr<<"\nInvalid token: ";  //do we need to save it as a token? (we are not)
-                    while(*temp != c){
-                        cout<<*temp;
-                        temp++;
-                    }
-                    cout << endl << endl;
-                    state = 0;
+                    state = -1; //erros indicator for lexeme to get discarded
                     retrackFlag = true;
                 }
                 break;
@@ -554,23 +575,39 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag, char*start
 
             case 33:
                 state = 24;
-                break;
+            break;
+                
 
         }
 
 }
+
+string getLexeme(char*& start, char *forward){
+    string lexeme;
+    while (1) { 
+        if (*start == EOF) 
+            if (start == &buffer1[BUF_SIZE - 1])
+                start = buffer2;
+            else if (start == &buffer2[BUF_SIZE - 1])
+                start = buffer1;
+    
+    if(start == forward) break;
+    lexeme += *start;
+    start++;
+    }
+    return lexeme;
+}
+
 Token tokenize(char *start, char* forward, int lexemeType){
     static int STindex = 32;
-    //get lexeme
-    string lexeme = getLexeme(start, forward);
     Token token;
+    string lexeme = getLexeme(start, forward);
 
     token.type = getTokenType(lexemeType);
-    token.stringValue = "";
-    token.intValue = 0;
-    
+
     if(lexemeType == 1) {  //keywords or identifier
-        int inTable = inSymbolTable(lexeme);
+        int inTable = inSymbolTable(lexeme); //get position in symbol table
+        
         if (inTable >= 0 && inTable < 32){ // keyword
             token.type = "keyword";
             token.stringValue = lexeme;
@@ -589,60 +626,6 @@ Token tokenize(char *start, char* forward, int lexemeType){
 
     return token;
 }
-Token getNextToken(char* buffer1, char* buffer2, bool *eofFlag) {
-    static char *forward = buffer1, *start = buffer1; //buffer pointers
-    int state = 1, lexemeType = -1;
-    char c;
-    bool retrackFlag = false;
-  
-    //handling the states
-    do{
-        //advancing forward ptr when meeting EOF
-        if (*forward == EOF) {
-            if (forward == &buffer1[BUF_SIZE - 1])
-                readFromFile(fileLoc, buffer2);
-            else if (forward == &buffer2[BUF_SIZE - 1])
-                readFromFile(fileLoc, buffer1);
-            else {
-                *eofFlag = true;
-                break;
-            }
-        }
-        c = *forward;
-        if(state == 1 && lexemeType == -1)  //that token is going to be ignored
-            string dump = getLexeme(start, forward);
-            
-        getState(c, state, lexemeType, retrackFlag, start);
-
-        if(!retrackFlag)
-            forward++;  
-        else
-            retrackFlag = false;
-        
-
-    }while(state != 1 || lexemeType == -1);
-
-
-    //check if terminated before reaching final state
-    if(!(state == 1 || state == 0 || state == 23)){
-        cerr << "\nToken incomplete: ";
-        while(start!= forward){
-            cout<<*start;
-            start++;
-        }
-        cout << endl;
-        Token token;
-        return token;
-    }
-
-    return tokenize(start, forward, lexemeType);
-
-}
-
-
-
-
-
 
 int inSymbolTable(string identifier) {
     int entry = 0;
