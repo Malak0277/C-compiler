@@ -12,7 +12,7 @@ string fileLoc = "../test.cpp";
 struct Token {
     string type;
     string stringValue;
-    int intValue;
+    float numValue;
 };
 
 vector<string> symbolTable = {
@@ -38,7 +38,7 @@ int main() {
 
     while (next.type != "UNKNOWN") {
         if (next.stringValue == "")
-            cout << '<' << next.type << ", " << next.intValue << "> " << endl;
+            cout << '<' << next.type << ", " << next.numValue << "> " << endl;
         else
         if(next.type == "keyword" || next.type == "LITERAL")
             cout << "<" << next.type << ", " << next.stringValue << "> " << endl;
@@ -298,6 +298,8 @@ void getState(char c, int &state, int &lexemeType, bool &retrackFlag){
                 state = 9;
             else if (c == 'x' || c == 'X')
                 state = 10;
+            else if (c == '8' || c == '9')
+                state = 27;
             else if (isdigit(c))
                 state = 11;
             else if (isalpha(c))
@@ -616,23 +618,23 @@ Token tokenize(string lexeme, int lexemeType){
             token.stringValue = lexeme;
         }
         else if (inTable < symbolTable.size()) // already existing identifier
-            token.intValue = inTable;
+            token.numValue = inTable;
         else { // new identifier
-            token.intValue = symbolTable.size();
+            token.numValue = symbolTable.size();
             symbolTable.push_back(lexeme);
         }
     }
         //Numbers
     else if(lexemeType == 2){ //dec
-        token.intValue = stoi(lexeme);
+        token.numValue = stof(lexeme);
     }
     else if(lexemeType == 3){ //bin
         const char* charPtr = &lexeme[2];
-        token.intValue = stoi(charPtr, NULL, 2);
+        token.numValue = stoi(charPtr, NULL, 2);
     }
     else if(lexemeType == 4 || lexemeType == 5){ //oct + hex
         const char* charPtr = &lexeme[0];
-        token.intValue = stoi(charPtr, NULL, 0);
+        token.numValue = stoi(charPtr, NULL, 0);
     }
     else if(lexemeType >= 6 && lexemeType <= 13) //others
         token.stringValue = lexeme;
