@@ -19,6 +19,12 @@ Grammar for:
     array
 */
 
+
+/*
+keyword, literal, num
+num NO3O EHH
+*/
+
 //-------------------------------------------
 #include <iostream>
 #include <string>
@@ -33,28 +39,23 @@ vector<nonTerminal> symbols;
 
 /*
 E    -> T E'
-E'   -> + T E' | €
+E'   -> + T E' | #
 T    -> F T2
-T2   -> * F T2 | €
+T2   -> * F T2 | #
 F    -> ( E ) | id
 
 nonTerminal[] F = [[id], [(, E, )]]
 */
 
 //-------------------------------------------
-//map
-string firstTable [SYMBOLS][2];
-string followTable [SYMBOLS][2];
 
-
-
-
-
-const int SYMBOLS = 10;
+string token;
+<identifier, int> -> token = "int"
+<PUNCTUATION, "{"> -> token = "{"
 
 // Statements
 stmt-sequence -> statement; stmt-seq
-stmt-seq -> stmt-sequence | €
+stmt-seq -> stmt-sequence | #
 
 statement  -> if-stm
             | while-stm
@@ -70,38 +71,56 @@ statement  -> if-stm
             | array
             //enum + union
 
-stmt_or_empty -> stmt-sequence | "€"
-
-// if [if-stm, else-part]
-if-stm -> if (exp) statement else-part
-else-part -> else statement | €
-
-
-//loops
-for_loop -> "for" "(" init_expr ; condition_expr ; update_expr ")" compound_statement
-init_expr -> assignment_expr_list | "€"
-assignment_expr_list -> assignment_expr cont_
-cont_ -> assignment_expr_list ,| "€"
-assignment_expr -> variable = expression
-variable -> ID Cont
-Cont-> int | "€"
-condition_expr -> expression | "€"
-update_expr -> assignment_expr_list | "€"
-compound_statement -> "{" stmnt "}"|stmnt;        ///////////////////////to be handelled
-
-
-while_loop -> "while" ( exp ) loop_statement
-
-do_while_loop -> "do" loop_statement "while" (exp ) ;
-
-loop_statement ->  { stmt-sequence } | statement";" | "€"
+op_stmt -> stmt-sequence | "#"
+op_exp -> exp | "#"
 
 
 
 //assignment
-assignment-type -> type | "€"
-assignment -> assignment-type identifier assignment-operator exp
-assignment-operator -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+assignment-statement -> integral_types integral_id | numeric_types numeric_id | string_types string_id | id_op rest
+id_op -> "identifier" | "#"
+
+assignment-operator  -> "=" 
+assignment-operator1 -> "+=" | "-=" | "*=" | "/=" | "%=" 
+assignment-operator2 -> "&=" | "|=" | "^=" 
+assignment-operator3 -> "<<=" | ">>="
+
+integral_types -> "int" | "unsigned" "int" | "short" | "long" long_integeral | "char"
+long_integeral -> "long" | "#" 
+numeric_types ->  "float" | "double" | "long" "double" 
+string_types -> "string"
+
+rest -> "identifier" all_operators exp
+integral_id -> "identifier" all_operators exp 
+all_operators -> assignment-operator | assignment-operator1 | assignment-operator2 | assignment-operator3 
+
+numeric_id -> "identifier" operators_numeric exp 
+operators_numeric -> assignment-operator | assignment-operator1
+
+string_id -> identifier assignment-operator exp
+
+
+//loops
+for_loop -> "for" "(" init_expr ";" condtions ";" conditions ")" compound_statement
+init_expr -> assignment_expr init_expr_cont | "#"
+init_expr_cont -> "," init_expr 
+assignment_expr -> "int" "id" "=" exp | "id" "=" exp
+
+conditions -> exp conditions_cont | "#"
+conditions_cont -> "," conditions
+
+compound_statement -> "{" op_stmt "}" | statement | ";"       
+
+while_loop -> "while" "(" conditions ")" compound_statement
+
+do_while_loop -> "do" compound_statement "while" "(" conditions ")" ";"
+
+
+
+// if 
+if-stm -> if (conditions) compound_statement else-part
+else-part -> else compound_statement | "#"
+
 
         
     
@@ -111,27 +130,27 @@ switch_body -> '{' first_case '}' ";" | one_case_d | "break"";"| ";" | stmt_sequ
 
 first_case -> case_stm_d | stmt-sequence case_stm_d
 
-case_body -> "{" stmt_or_empty break_stm "}" | stmt_or_empty
+case_body -> "{" op_stmt break_stm "}" | op_stmt
 
 
 case_stm_d  -> "case" constant_exp ':' case_body break_stm case_stm_d 
             |  "default" ':' case_body break_stm case_stm
-            |  "€"
+            |  "#"
 
 case_stm  -> "case" constant_exp ':' case_body break_stm case_stm
-            | "€"
+            | "#"
 
 one_case_d -> "case" constant_exp ':' stmt_part_d 
             |  "default" ':' stmt_part
                 
-one_case -> "case" constant_exp ':' stmt_part | "€"
+one_case -> "case" constant_exp ':' stmt_part | "#"
 
 
-stmt_part_d -> one_case_d | stmt-sequence | "break" ";" | "{" stmt_or_empty break_stm "}"
-stmt_part -> one_case | stmt-sequence | "break" ";" | "{" stmt_or_empty break_stm "}"
+stmt_part_d -> one_case_d | stmt-sequence | "break" ";" | "{" op_stmt break_stm "}"
+stmt_part -> one_case | stmt-sequence | "break" ";" | "{" op_stmt break_stm "}"
 
 constant_exp -> number | literal                 
-break_stm -> "break" ";" | "€"
+break_stm -> "break" ";" | "#"
 
 
 
@@ -140,27 +159,27 @@ break_stm -> "break" ";" | "€"
     number -> DEC | BIN | OCT | HEX
 
     //type
-    type               -> integral_types | numeric_types | pointer_type | user_defined_type //long, short
+    type               -> string_types | numeric_types | pointer_type | user_defined_type | "auto"
     pointer_type       -> type '*'
-    user_defined_type  -> struct_type | typedef_type //enum_type
+    user_defined_type  -> struct_type | typedef_type //enum_type - union
     struct_type        -> 'struct' identifier
     typedef_type       -> identifier
 
     ///////Expressions [exp, exp2, addop, term, term2, mulop, factor]
-    exp -> term exp2
-    exp2 -> addop term exp2 | €
+    exp -> term exp2   //no "#" 3shan 5ater el func w kda
+    exp2 -> addop term exp2 | #
     addop   -> + | -
     term -> factor term2
-    term2 -> mulop factor term2 | €
+    term2 -> mulop factor term2 | #
     mulop   -> * | /
     factor  -> (exp) | number
 
     //////expressionsPRO 
 
     exp               -> term exp2
-    exp2              -> addop term exp2 | €
+    exp2              -> addop term exp2 | #
     term              -> factor term2
-    term2             -> mulop factor term2 | €
+    term2             -> mulop factor term2 | #
     factor            -> '(' exp ')' | number | identifier | function_call | array_access | struct_access | pointer_op | type_cast | boolean_exp | string_op | bitwise_op | unary_op
     addop             -> '+' | '-'
     mulop             -> '*' | '/'
@@ -183,22 +202,38 @@ break_stm -> "break" ";" | "€"
 
 
 
-//Functions
-function_stm -> type identifier '(' parameter_list ')' func2 | 'void' identifier '(' parameter_list ')' func3
-func2 -> ";" | {stmt-and-return}
-stmt-and-return ->  stmt-sequence stmt-and-return | return_stm stmt-and-return
-stmt-and-void-return ->  stmt-sequence stmt-and-return | void-return_stm stmt-and-return
-func3 -> ";" | {stmt-and-void-return}
+//Functions - versions: proto/not void/not
+function_start -> type identifier '(' function_stm
+function_stm -> op_parameter ')' {func_body} | op_parameter_proto ')' ";"
 
-parameter_list       -> parameter | parameter ',' parameter_list | "€"
+func_start_void -> "void" identifier '(' function_stm_void
+function_stm_void ->  op_parameter ')' {func_body_void} | op_parameter_proto ')'";"
+
+
+func_body ->  op_stmt "return" exp ";" end_
+end_ -> op_stmt maybe_return | "#"
+maybe_return -> func_body | "#";
+
+func_body_void -> op_stmt op_return
+op_return -> "return" ";" end_void | "#"
+end_void ->  func_body_void | "#"
+
+op_parameter -> parameter_list | "#"
+parameter_list       -> parameter parameter_list_cont
+parameter_list_cont ->  ',' parameter_list | "#"
 parameter            -> type identifier
 
-function_call_statement  -> identifier '(' argument_list ')' ';'
-argument_list           -> exp | exp ',' argument_list | "€"
+op_parameter_proto -> parameter_list_proto | "#"
+parameter_list_proto       -> parameter_proto parameter_list_cont_proto
+parameter_list_cont_proto ->  ',' parameter_list_proto | "#"
+parameter_proto -> type id_op
+id_op -> identifier | "#"
 
 
-return-stm     -> 'return' exp ';'
-void-return-stm -> 'return' ';'
+function_call_statement  -> identifier '(' op_argument ')' ';'
+op_argument -> argument_list | "#"
+argument_list -> exp argument_list_cont
+argument_list_cont -> ',' argument_list | "#"
 
 
 
@@ -240,7 +275,7 @@ vector<string> follow(nonTerminal t){
                         else // if it is a non-terminal
                             vector<string> vect = first(after);
                             for(int i = 0; i < vect.size(); i++)
-                                if(vect[i] == "€")
+                                if(vect[i] == "#")
                                     followVect.push_back(follow(start));
                                 else
                                     followVect.push_back(vect[i])

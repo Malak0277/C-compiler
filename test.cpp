@@ -3,15 +3,24 @@
 #include <vector>
 using namespace std;
 
-int main(){
+    void square (int a){
+        cout << "ll";
+    }
 
-int a[] = {2, 3, 5, };
 
-cout << a[2];
+int main() {
 
+
+    square(4);
+
+    return 0;
 }
 
 
+
+// FUNCTION CALL
+//inline, anonymous, function inside function
+//memory -> variables(initialized aw la? plus no3ha eh?); call (kanet void aw la)
 
 
 /*
