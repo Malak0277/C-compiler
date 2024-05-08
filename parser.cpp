@@ -1,7 +1,7 @@
 /*
 -> Grammar rules
--> Parsing table (FIRST, FOLLOW)
--> Stack -> tree
+-> Parsing table (FIRST, FOLLOW, nonterminals, terminals = tokans!!!!)
+-> Stack -> tree (getting tokens from lexical)
 */
 
 
