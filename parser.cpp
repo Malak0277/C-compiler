@@ -68,12 +68,14 @@ statement  -> if-stm
             | function-declaration 
             | function-call 
             | array
+            //enum + union
 
 stmt_or_empty -> stmt-sequence | "€"
 
 // if [if-stm, else-part]
 if-stm -> if (exp) statement else-part
 else-part -> else statement | €
+
 
 //loops
 for_loop -> "for" "(" init_expr ; condition_expr ; update_expr ")" compound_statement
@@ -101,42 +103,35 @@ assignment-type -> type | "€"
 assignment -> assignment-type identifier assignment-operator exp
 assignment-operator -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
 
-
         
     
 //switch
-switch_stm -> "switch" '(' exp ')' case_body
-case_body -> '{' case_stm_d '}' ";" | case_no_brace_d | break_stm | ";" | stmt-sequence
+switch_stm -> "switch" '(' exp ')' switch_body
+switch_body -> '{' first_case '}' ";" | one_case_d | "break"";"| ";" | stmt_sequence
 
-case_stm_d  -> "case" constant_exp ':' "{" stmt_or_empty break_stm "}" break_stm case_stm_d 
-            |  "default" ':' "{" stmt_or_empty break_stm "}" break_stm case_stm
+first_case -> case_stm_d | stmt-sequence case_stm_d
 
-            |  "case" constant_exp ':' stmt_or_empty break_stm case_stm_d 
-            |  "default" ':' stmt_or_empty break_stmt case_stm
+case_body -> "{" stmt_or_empty break_stm "}" | stmt_or_empty
+
+
+case_stm_d  -> "case" constant_exp ':' case_body break_stm case_stm_d 
+            |  "default" ':' case_body break_stm case_stm
             |  "€"
 
-case_stm  -> "case" constant_exp ':' "{" stmt_or_empty break_stm "}" break_stm case_stm 
-            |"case" constant_exp ':' stmt_or_empty break_stm case_stm 
+case_stm  -> "case" constant_exp ':' case_body break_stm case_stm
             | "€"
 
-//   stmt_or_empty break_stm => "{" stmt_or_empty break_stm "}" break_stm
+one_case_d -> "case" constant_exp ':' stmt_part_d 
+            |  "default" ':' stmt_part
+                
+one_case -> "case" constant_exp ':' stmt_part | "€"
 
-case_no_brace_d -> "case" constant_exp ':' stmt_part_d 
-                |  "default" ':' stmt_part
-                |  "€"
 
-case_no_brace -> "case" constant_exp ':' stmt_part | "€"
+stmt_part_d -> one_case_d | stmt-sequence | "break" ";" | "{" stmt_or_empty break_stm "}"
+stmt_part -> one_case | stmt-sequence | "break" ";" | "{" stmt_or_empty break_stm "}"
 
-default_case -> "default" ':' stmt_or_empty break_stmt cases
-default_case_no_braces -> "default" ':' stmt_part_d
-
-stmt_part_d -> "€" case_no_brace_d | stmt-sequence | "break" ";"
-stmt_part -> "€" case_no_brace 
-            | stmt-sequence | "break" ";" ///////////////////
-
-constant_exp -> number | string                  
+constant_exp -> number | literal                 
 break_stm -> "break" ";" | "€"
-
 
 
 
@@ -145,9 +140,9 @@ break_stm -> "break" ";" | "€"
     number -> DEC | BIN | OCT | HEX
 
     //type
-    type               -> int | float | char | double | pointer_type | user_defined_type
+    type               -> integral_types | numeric_types | pointer_type | user_defined_type //long, short
     pointer_type       -> type '*'
-    user_defined_type  -> struct_type | typedef_type
+    user_defined_type  -> struct_type | typedef_type //enum_type
     struct_type        -> 'struct' identifier
     typedef_type       -> identifier
 

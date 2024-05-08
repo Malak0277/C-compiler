@@ -5,8 +5,9 @@ using namespace std;
 
 int main(){
 
-cout << "this" == "this";
-cout << "this" == "his";
+int a[] = {2, 3, 5, };
+
+cout << a[2];
 
 }
 
