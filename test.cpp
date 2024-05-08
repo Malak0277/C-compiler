@@ -4,11 +4,18 @@
 using namespace std;
 
 int main(){
-    int x = 4;
-    
-    switch(x)
-        case 4: 
-        case 5: 
-        case 6:
-        default: 
+
+cout << "this" == "this";
+cout << "this" == "his";
+
 }
+
+
+
+
+/*
+    int x = 1;
+    x = 3;
+    y = 1;
+
+    */

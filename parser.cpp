@@ -69,7 +69,7 @@ statement  -> if-stm
             | function-call 
             | array
 
-
+stmt_or_empty -> stmt-sequence | "€"
 
 // if [if-stm, else-part]
 if-stm -> if (exp) statement else-part
@@ -105,24 +105,38 @@ assignment-operator -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^
         
     
 //switch
-switch_stm -> "switch" '(' exp ')' one_case
-one_case -> '{' cases switch_stm2 | cases_no_braces | default_case | "€"
-switch_stm2 ->  default_case '}'";" | '}' ";"
+switch_stm -> "switch" '(' exp ')' case_body
+case_body -> '{' case_stm_d '}' ";" | case_no_brace_d | break_stm | ";" | stmt-sequence
 
+case_stm_d  -> "case" constant_exp ':' "{" stmt_or_empty break_stm "}" break_stm case_stm_d 
+            |  "default" ':' "{" stmt_or_empty break_stm "}" break_stm case_stm
 
-cases -> case_stm cases | "€"
-case_stm  -> "case" constant_exp ':' case_stm2
-case_stm2 ->  stmt-sequence semi | "€"
+            |  "case" constant_exp ':' stmt_or_empty break_stm case_stm_d 
+            |  "default" ':' stmt_or_empty break_stmt case_stm
+            |  "€"
 
-cases_no_braces -> case_stm_no_braces  | "€"
-case_stm_no_braces -> "case" constant_exp ':' case_stm_no_braces2
-case_stm_no_braces2 -> cases_no_braces | default_case | stmt-sequence semi
+case_stm  -> "case" constant_exp ':' "{" stmt_or_empty break_stm "}" break_stm case_stm 
+            |"case" constant_exp ':' stmt_or_empty break_stm case_stm 
+            | "€"
 
+//   stmt_or_empty break_stm => "{" stmt_or_empty break_stm "}" break_stm
 
-default_case -> DEFAULT ':' default_case2
-default_case2 -> stmt-sequence semi | semi
+case_no_brace_d -> "case" constant_exp ':' stmt_part_d 
+                |  "default" ':' stmt_part
+                |  "€"
+
+case_no_brace -> "case" constant_exp ':' stmt_part | "€"
+
+default_case -> "default" ':' stmt_or_empty break_stmt cases
+default_case_no_braces -> "default" ':' stmt_part_d
+
+stmt_part_d -> "€" case_no_brace_d | stmt-sequence | "break" ";"
+stmt_part -> "€" case_no_brace 
+            | stmt-sequence | "break" ";" ///////////////////
+
 constant_exp -> number | string                  
-semi -> ";" | "€"
+break_stm -> "break" ";" | "€"
+
 
 
 
