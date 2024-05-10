@@ -8,14 +8,36 @@ using namespace std;
     }
 
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+
+std::vector<std::string> splitOnWhitespace(const std::string& str) {
+    std::vector<std::string> result;
+    std::istringstream iss(str);
+    std::string token;
+
+    // Read each token separated by whitespace and store it in the result vector
+    while (iss >> token) {
+        result.push_back(token);
+    }
+
+    return result;
+}
+
 int main() {
+    std::string input = "This is a test string";
+    std::vector<std::string> words = splitOnWhitespace(input);
 
-
-    square(4);
+    // Print the words
+    for (const auto& word : words) {
+        std::cout << word << std::endl;
+    }
+    cout << words.size();
 
     return 0;
 }
-
 
 
 // FUNCTION CALL
