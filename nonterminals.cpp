@@ -16,7 +16,6 @@ using namespace std;
 
 class NonTerminalClass {
 private:
-    string nonTerminal; // the name of this non terminal
     vector<string> first;
     map <string, vector<string>> firstGrammar;
     vector<string> follow;
@@ -25,6 +24,7 @@ private:
     vector<string> foreignStart; // All the non-terminals where this non-terminal appears
 
 public:
+    string nonTerminal; // the name of this non terminal
     static map<string, NonTerminalClass> nonTerminalObject;
 
     NonTerminalClass() {}   
@@ -39,7 +39,6 @@ public:
     vector<string> getFollow(bool o = false){
         if (follow.size() == 0) 
             setFollow(o);
-        cout << follow[0] << endl;
         return follow;
     }
 
@@ -50,7 +49,6 @@ public:
     void setForeignGrammar(vector<string> g){
         foreignGrammar.push_back(g);
     }
-
 
     vector<string> getForeignStart(){
         return foreignStart;
@@ -115,22 +113,29 @@ public:
 
                             map <string, vector<string>> vect = afterObj.getFirst();
 
+                                                                   
+
                             for (const auto& pair : vect) 
                                 if(pair.first == "\"#\""){
-                                    vector<string> nextNonTerminalFollow = nonTerminalObject[foreignStart[i]].getFollow();
-                                    for(int i = 0; i < nextNonTerminalFollow.size(); i++)
-                                        followVect.push_back(nextNonTerminalFollow[i]);
+                                    if(start.nonTerminal == word)
+                                        continue;
+                                    vector<string> nextNonTerminalFollow =  start.getFollow();
+                                   // for (const auto& pair : f) 
+                                    //firstGrammar.insert({pair.first, pair.second});
+                                    for(int k = 0; k < nextNonTerminalFollow.size(); k++)
+                                        followVect.push_back(nextNonTerminalFollow[k]);
                                 }
                                 else
                                     followVect.push_back(pair.first);
                                                     
                         }
                     }else{ //if it is the last element
+                        if(start.nonTerminal == word)
+                            continue;
                         vector<string> nextNonTerminalFollow = start.getFollow();
-                        cout << nextNonTerminalFollow.size();
-                        for(int i = 0; i < nextNonTerminalFollow.size(); i++){
-                            followVect.push_back(nextNonTerminalFollow[i]);
-                        }
+                        for(int h = 0; h < nextNonTerminalFollow.size(); h++)
+                            followVect.push_back(nextNonTerminalFollow[h]);
+                        
                     }
                         
                 }
@@ -182,9 +187,6 @@ map <pair <string, string>, string> parseTable(vector<string> NT, vector<string>
 
     myMap.insert({{"key1", "key2"}, "value1"});
 
-    //int rows = NT.size(), cols = T.size(); 
-    //vector<vector<string>> arr(rows, vector<string>(cols));
-
     for(int i = 0; i < NT.size(); i++){ // loop on non-terminals
         NonTerminalClass obj = NonTerminalClass::nonTerminalObject[NT[i]];
 
@@ -196,7 +198,6 @@ map <pair <string, string>, string> parseTable(vector<string> NT, vector<string>
 
 }
 */
-
 //el grammar elli 7asal bsbb el first di
 
 vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>& terminals){
@@ -299,13 +300,16 @@ int main() {
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].extractNonTerminals();
     }
 
-/*
-    vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[0]].getFollow(true);    
+
+    vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[0]].getFollow(true);     // $
     for (int i = 0; i < nonTerminalList.size(); i++){
         map <string, vector<string>> first = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();       
-        vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();    
+        vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();
+        cout << "@@@" << NonTerminalClass::nonTerminalObject[nonTerminalList[i]].nonTerminal << endl;
+        for (int i = 0; i < follow.size(); i++)
+            cout << follow[i] << endl;    
     }
-*/
+
     
 // TESTS
     //foreign grammar
