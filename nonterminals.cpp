@@ -154,7 +154,7 @@ public:
         follow = removeDuplicates(follow);
     }
 
-    bool isTerminal(const string& str) {
+    bool static isTerminal(const string& str) {
         return (str.size() >= 2 && str.front() == '"' && str.back() == '"');
     }
 
@@ -194,13 +194,20 @@ map <pair <string, string>, vector<string>> ParseTable(vector<string> NT, vector
                     for (int x = 0; x < obj.getFollow().size(); x++)
                             myMap.insert({{NT[i], obj.getFollow()[x]}, epsilon});                
                 }
-                    
-                myMap.insert({{NT[i], pair.first}, pair.second});
+                else
+                    myMap.insert({{NT[i], pair.first}, pair.second});
             }
         }
     }
 
     return myMap;
+}
+
+
+
+
+vector<string> getFromParseTable(map <pair <string, string>, vector<string>> table, string nt, string token){
+    return table[make_pair(nt, token)];
 }
 
 
@@ -218,20 +225,17 @@ vector<string> split(const string& str, const string& delimiter) {
 
 
 
-vector<string> getFromParseTable(map <pair <string, string>, vector<string>> table, string nt, string token){
-    return table[make_pair(nt, token)];
-}
-
 
 vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>& terminals){
     vector<vector<string>> grammarRules;
+    vector<vector<string>> emptyRule;
 
 
     // Split the line based on "->"
     vector<string> parts = split(line, "->");
     if (parts.size() != 2) {
         cerr << "Invalid line format: " << line << endl;
-        return grammarRules;
+        return emptyRule;
     }
 
     vector<string> result;
@@ -245,7 +249,7 @@ vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>&
 
     if(result.size() != 1) {
         cerr << "Invalid line format: " << line << endl;
-        return grammarRules;
+        return emptyRule;
     }
     
     ntName = result[0];
@@ -255,7 +259,7 @@ vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>&
     for (const auto& subpart : subparts) {
         if (all_of(subpart.begin(), subpart.end(), ::isspace)) {
             cerr << "Invalid line format: " << line << endl;
-            return grammarRules;
+            return emptyRule;
         }
         vector<string> rule;
         vector<string> words = split(subpart, " ");
@@ -266,7 +270,7 @@ vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>&
                 for(int i = 1; i < word.size()-1; i++)
                     if (word[i] == '\"'){
                         cerr << "Invalid line format: " << line << endl;
-                        return grammarRules;
+                        return emptyRule;
                     }
 
                 terminals.push_back(word);
@@ -323,8 +327,6 @@ int main() {
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].extractNonTerminals();
     }
 
-    cout << "==+++++++++++++++++++++++++++++++++++++++&&&&&&&&&&"<<endl;
-    cout << NonTerminalClass::nonTerminalObject[nonTerminalList[0]].nonTerminal << endl;
     bool o;
     for (int i = 0; i < nonTerminalList.size(); i++){
         map <string, vector<string>> first = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();  
@@ -355,7 +357,7 @@ int main() {
         }
         cout << endl << endl;
     }
-
+*/
     
     //first
     cout << endl << "firstttt" << endl << endl;
@@ -379,6 +381,7 @@ int main() {
 
     }
 
+
 // follow
 
     cout << endl << "followww" << endl << endl;
@@ -393,10 +396,9 @@ int main() {
     }
 
 
-*/
 
 // parse table
-cout << "DUN...DUN....DUNNNNNNN" << endl;
+cout << "Parse Table" << endl;
 map <pair <string, string>, vector<string>> parseTable = ParseTable(nonTerminalList, terminalList);
 
 
@@ -408,7 +410,7 @@ for(int i = 0; i < nonTerminalList.size(); i++){
         if(parseTable.find(make_pair(nonTerminalList[i], terminalList[j])) != parseTable.end()){
             cout << terminalList[j] << " : ";
                 for (const std::string& str : parseTable[make_pair(nonTerminalList[i], terminalList[j])]) 
-                    cout << str;
+                    cout << str << " ";
                 cout << endl;
         }
    cout << endl;

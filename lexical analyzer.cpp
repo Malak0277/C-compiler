@@ -13,11 +13,12 @@ struct Token {
     string type;
     string stringValue;
     float numValue;
+    string datatype;
 };
 
 vector<string> symbolTable = {
-        "auto", "break", "case", "char", "const", "continue","default", "do", "double", "else", "enum",
-        "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed",
+        "auto", "float", "char", "int","long","double","short", "signed", "unsigned","break", "case", "const", "continue","default", "do", "else", "enum",
+        "extern", "for", "goto", "if",  "register", "return",
         "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
 };        //identifiers start from index 32
 
@@ -608,8 +609,7 @@ Token tokenize(string lexeme, int lexemeType){
     if(lexemeType >= 2 && lexemeType <= 5)
         token.type = "NUM";
     else
-        token.type = getTokenType(lexemeType);
-
+        token.type = getTokenType(lexemeType); 
     if(lexemeType == 1) {  //keywords or identifier
         int inTable = inSymbolTable(lexeme); //get position in symbol table
 
