@@ -37,9 +37,9 @@ public:
     }
 
     vector<string> getFollow(bool o = false){
-        
         if (follow.size() == 0) 
             setFollow(o);
+        cout << follow[0] << endl;
         return follow;
     }
 
@@ -62,7 +62,6 @@ public:
 
 
     void extractNonTerminals(){
-        cout << nonTerminal << endl;
         for(int i = 0; i < grammar.size(); i++) // each grammar rule
             for(int j = 0; j < grammar[i].size(); j++){  // each word per rule
                 if(!isTerminal(grammar[i][j])){
@@ -118,7 +117,7 @@ public:
 
                             for (const auto& pair : vect) 
                                 if(pair.first == "\"#\""){
-                                    vector<string> nextNonTerminalFollow = start.getFollow();
+                                    vector<string> nextNonTerminalFollow = nonTerminalObject[foreignStart[i]].getFollow();
                                     for(int i = 0; i < nextNonTerminalFollow.size(); i++)
                                         followVect.push_back(nextNonTerminalFollow[i]);
                                 }
@@ -129,8 +128,9 @@ public:
                     }else{ //if it is the last element
                         vector<string> nextNonTerminalFollow = start.getFollow();
                         cout << nextNonTerminalFollow.size();
-                        for(int i = 0; i < nextNonTerminalFollow.size(); i++)
+                        for(int i = 0; i < nextNonTerminalFollow.size(); i++){
                             followVect.push_back(nextNonTerminalFollow[i]);
+                        }
                     }
                         
                 }
@@ -299,12 +299,13 @@ int main() {
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].extractNonTerminals();
     }
 
+/*
     vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[0]].getFollow(true);    
     for (int i = 0; i < nonTerminalList.size(); i++){
         map <string, vector<string>> first = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();       
         vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();    
     }
-
+*/
     
 // TESTS
     //foreign grammar
@@ -329,8 +330,8 @@ int main() {
     for (int i = 0; i < nonTerminalList.size(); i++){
         
         cout << nonTerminalList[i] << " => ";
-        /*
-        NonTerminalClass::nonTerminalObject[nonTerminalList[i]].setFirst();
+        
+        //NonTerminalClass::nonTerminalObject[nonTerminalList[i]].setFirst();
         map <string, vector<string>> fm = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();  
 
         for (const auto& pair : fm){
@@ -342,7 +343,7 @@ int main() {
         
 
         
-
+/*
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].setFollow();
         vector<string> fl= NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();  
     
@@ -353,6 +354,8 @@ int main() {
     }
     */
 
+
+
     for (int i = 0; i < nonTerminalList.size(); i++){
         cout << nonTerminalList[i] << " => ";
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].setFollow();
@@ -362,6 +365,7 @@ int main() {
         cout << endl;
 
     }
+
 }
 
 
