@@ -22,13 +22,16 @@ private:
     vector<vector<string>> grammar;
     vector<vector<string>> foreignGrammar; // All the grammar where this non-terminal appears
     vector<string> foreignStart; // All the non-terminals where this non-terminal appears
+    bool followSignal;
 
 public:
     string nonTerminal; // the name of this non terminal
     static map<string, NonTerminalClass> nonTerminalObject;
 
     NonTerminalClass() {}   
-    NonTerminalClass(string n, const vector<vector<string>>& rules) : nonTerminal(n), grammar(rules){}
+    NonTerminalClass(string n, const vector<vector<string>>& rules) : nonTerminal(n), grammar(rules){
+        followSignal = false;
+    }
 
     map <string, vector<string>> getFirst(){
         if (firstGrammar.size() == 0) 
@@ -37,8 +40,16 @@ public:
     }
 
     vector<string> getFollow(bool o = false){
-        if (follow.size() == 0) 
-            setFollow(o);
+        if (followSignal){
+            follow.push_back("$");
+            return follow;
+        }
+        
+        if (follow.size() == 0) {
+            if(o)
+                follow.push_back("$");
+            setFollow();
+        }
         return follow;
     }
 
@@ -89,25 +100,22 @@ public:
     }
 
 
-    void setFollow(bool o = false){
-        vector<string> followVect;
-
-        if(o)
-            followVect.push_back("$"); //s7 wala eh
+    void setFollow(){
 
         for(int i = 0; i < foreignGrammar.size(); i++)
             for(int j = 0; j < foreignGrammar[i].size(); j++){
                 string word = foreignGrammar[i][j];
                 if(word == nonTerminal){
+                    followSignal = true;
                     NonTerminalClass start = nonTerminalObject[foreignStart[i]];
                     if(start.nonTerminal == word)
-                        followVect.push_back("$");
+                        follow.push_back("$");
                     
                     if(j != foreignGrammar[i].size()-1){ //check it is not the last word in the rule
                         string after = foreignGrammar[i][j+1];
 
                         if (isTerminal(after)) //if it is a terminal
-                            followVect.push_back(after);
+                            follow.push_back(after);
                         else{ // if it is a non-terminal
                             NonTerminalClass afterObj = nonTerminalObject[after];
 
@@ -123,10 +131,10 @@ public:
                                    // for (const auto& pair : f) 
                                     //firstGrammar.insert({pair.first, pair.second});
                                     for(int k = 0; k < nextNonTerminalFollow.size(); k++)
-                                        followVect.push_back(nextNonTerminalFollow[k]);
+                                        follow.push_back(nextNonTerminalFollow[k]);
                                 }
                                 else
-                                    followVect.push_back(pair.first);
+                                    follow.push_back(pair.first);
                                                     
                         }
                     }else{ //if it is the last element
@@ -134,7 +142,7 @@ public:
                             continue;
                         vector<string> nextNonTerminalFollow = start.getFollow();
                         for(int h = 0; h < nextNonTerminalFollow.size(); h++)
-                            followVect.push_back(nextNonTerminalFollow[h]);
+                            follow.push_back(nextNonTerminalFollow[h]);
                         
                     }
                         
@@ -142,16 +150,15 @@ public:
 
             }
 
-        follow = removeDuplicates(followVect);
+        followSignal = false;
+        follow = removeDuplicates(follow);
     }
-
-private:
 
     bool isTerminal(const string& str) {
         return (str.size() >= 2 && str.front() == '"' && str.back() == '"');
     }
 
-    vector<string> removeDuplicates(const vector<string>& arr) {
+    static vector<string> removeDuplicates(const vector<string>& arr) {
         vector<string> uniqueArr;
 
         // Iterate through the array and add unique elements to the uniqueArr
@@ -166,8 +173,36 @@ private:
 
 };
 
-
 map<string, NonTerminalClass> NonTerminalClass::nonTerminalObject;
+
+
+map <pair <string, string>, vector<string>> ParseTable(vector<string> NT, vector<string> T){
+    //map <pair<nt, t>, grammar>
+    map <pair <string, string>, vector<string>> myMap;
+    vector<string> epsilon;
+    epsilon.push_back("\"#\"");
+
+    for(int i = 0; i < NT.size(); i++){ // loop on non-terminals
+        NonTerminalClass obj = NonTerminalClass::nonTerminalObject[NT[i]];
+        map <string, vector<string>> vect = obj.getFirst();  
+
+        for (const auto& pair :vect){
+            if(myMap.find(make_pair(NT[i], pair.first)) != myMap.end())
+                cout << "LL1() violated !!!!!!!!" << endl;
+            else{
+                if(pair.first == "\"#\""){
+                    for (int x = 0; x < obj.getFollow().size(); x++)
+                            myMap.insert({{NT[i], obj.getFollow()[x]}, epsilon});                
+                }
+                    
+                myMap.insert({{NT[i], pair.first}, pair.second});
+            }
+        }
+    }
+
+    return myMap;
+}
+
 
 vector<string> split(const string& str, const string& delimiter) {
     vector<string> tokens;
@@ -180,25 +215,13 @@ vector<string> split(const string& str, const string& delimiter) {
     return tokens;
 }
 
-/*
-map <pair <string, string>, string> parseTable(vector<string> NT, vector<string> T){
-    //map <pair<nt, t>, grammar>
-    map <pair <string, string>, string> myMap;
-
-    myMap.insert({{"key1", "key2"}, "value1"});
-
-    for(int i = 0; i < NT.size(); i++){ // loop on non-terminals
-        NonTerminalClass obj = NonTerminalClass::nonTerminalObject[NT[i]];
-
-        for(int j = 0; j < obj.getFirst().size(); j++) // loop on first
-            if(obj.getFirst()[j] == "\"#\""){}
-            myMap.insert({{NT[i], obj.getFirst()[j]}, "value1"});
-    }
 
 
+
+vector<string> getFromParseTable(map <pair <string, string>, vector<string>> table, string nt, string token){
+    return table[make_pair(nt, token)];
 }
-*/
-//el grammar elli 7asal bsbb el first di
+
 
 vector<vector<string>> cfgExtractor(string line, string &ntName, vector<string>& terminals){
     vector<vector<string>> grammarRules;
@@ -288,30 +311,34 @@ int main() {
         }
 
     }
-
-
+    terminalList = NonTerminalClass::removeDuplicates(terminalList);
 
     file.close();
 
 
 
+    terminalList.push_back("$");
     //SETTERS
     for (int i = 0; i < nonTerminalList.size(); i++){
         NonTerminalClass::nonTerminalObject[nonTerminalList[i]].extractNonTerminals();
     }
 
-
-    vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[0]].getFollow(true);     // $
+    cout << "==+++++++++++++++++++++++++++++++++++++++&&&&&&&&&&"<<endl;
+    cout << NonTerminalClass::nonTerminalObject[nonTerminalList[0]].nonTerminal << endl;
+    bool o;
     for (int i = 0; i < nonTerminalList.size(); i++){
-        map <string, vector<string>> first = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();       
-        vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();
-        cout << "@@@" << NonTerminalClass::nonTerminalObject[nonTerminalList[i]].nonTerminal << endl;
-        for (int i = 0; i < follow.size(); i++)
-            cout << follow[i] << endl;    
+        map <string, vector<string>> first = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFirst();  
+        if (i == 0)     
+            o = true;
+        else 
+            o = false;
+        vector<string> follow = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow(o);
+ 
     }
 
     
 // TESTS
+/*
     //foreign grammar
     for (int i = 0; i < nonTerminalList.size(); i++){
         vector<string> k = NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getForeignStart();
@@ -329,8 +356,9 @@ int main() {
         cout << endl << endl;
     }
 
-    /*
+    
     //first
+    cout << endl << "firstttt" << endl << endl;
     for (int i = 0; i < nonTerminalList.size(); i++){
         
         cout << nonTerminalList[i] << " => ";
@@ -347,18 +375,13 @@ int main() {
         
 
         
-/*
-        NonTerminalClass::nonTerminalObject[nonTerminalList[i]].setFollow();
-        vector<string> fl= NonTerminalClass::nonTerminalObject[nonTerminalList[i]].getFollow();  
-    
-        for(int i = 0; i < fl.size(); i++)
-                cout << fl[i] << " ";
-        cout << endl;
+
 
     }
-    */
 
+// follow
 
+    cout << endl << "followww" << endl << endl;
 
     for (int i = 0; i < nonTerminalList.size(); i++){
         cout << nonTerminalList[i] << " => ";
@@ -367,8 +390,30 @@ int main() {
         for(int i = 0; i < fl.size(); i++)
                 cout << fl[i] << " ";
         cout << endl;
-
     }
+
+
+*/
+
+// parse table
+cout << "DUN...DUN....DUNNNNNNN" << endl;
+map <pair <string, string>, vector<string>> parseTable = ParseTable(nonTerminalList, terminalList);
+
+
+
+for(int i = 0; i < nonTerminalList.size(); i++){ 
+    cout << nonTerminalList[i] << endl;
+    cout << "*********************" << endl;
+    for(int j = 0; j < terminalList.size(); j++)
+        if(parseTable.find(make_pair(nonTerminalList[i], terminalList[j])) != parseTable.end()){
+            cout << terminalList[j] << " : ";
+                for (const std::string& str : parseTable[make_pair(nonTerminalList[i], terminalList[j])]) 
+                    cout << str;
+                cout << endl;
+        }
+   cout << endl;
+}
+
 
 }
 
