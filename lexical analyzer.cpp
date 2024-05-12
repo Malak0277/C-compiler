@@ -7,7 +7,7 @@ using namespace std;
 //Global variables
 const int BUF_SIZE = 4096;
 char buffer1[BUF_SIZE], buffer2[BUF_SIZE];
-string fileLoc = "../test.cpp";
+string fileLoc = "test.cpp";
 
 struct Token {
     string type;
@@ -32,26 +32,27 @@ Token tokenize(string, int);
 int inSymbolTable(string);
 void printSymbolTable();
 
-int main() {
-    readFromFile(fileLoc, buffer1);
 
-    Token next = getNextToken();
+// int main() {
+//     readFromFile(fileLoc, buffer1);
 
-    while (next.type != "UNKNOWN") {
-        if (next.stringValue == "")
-            cout << '<' << next.type << ", " << next.numValue << "> " << endl;
-        else
-        if(next.type == "keyword" || next.type == "LITERAL")
-            cout << "<" << next.type << ", " << next.stringValue << "> " << endl;
-        else
-            cout << "<" << next.type << ", " << next.stringValue << " > " << endl;
+//     Token next = getNextToken();
 
-        next = getNextToken();
-    }
+//     while (next.type != "UNKNOWN") {
+//         if (next.stringValue == "")
+//             cout << '<' << next.type << ", " << next.numValue << "> " << endl;
+//         else
+//         if(next.type == "keyword" || next.type == "LITERAL")
+//             cout << "<" << next.type << ", " << next.stringValue << "> " << endl;
+//         else
+//             cout << "<" << next.type << ", " << next.stringValue << " > " << endl;
 
-    printSymbolTable();
-    return 0;
-}
+//         next = getNextToken();
+//     }
+
+//     printSymbolTable();
+//     return 0;
+// }
 
 
 void readFromFile(const string& program, char buffer[]) {
