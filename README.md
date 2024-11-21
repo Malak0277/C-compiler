@@ -23,23 +23,24 @@ C-compiler project focusing on lexical and syntax analysis implemented using C++
 - Systematic C language source code parsing
 - Token recognition and classification
 - Syntax error detection
+- Grammar Parsing Mechanism
 
 
 
 
-## Grammar Parsing Mechanism
+### Grammar Parsing Mechanism
 
-### CFG-Driven Parser Generation
+#### CFG-Driven Parser Generation
 - Parses the Context-Free Grammar (CFG) file dynamically
 - Generates parsing rules and syntax analysis code programmatically
 - Converts grammar specification into executable parsing logic
 
-### Key Implementation Features
+#### Key Implementation Features
 - Automatic rule extraction from CFG file
 - Dynamic parser construction
 - Flexible grammar modification support
 
-### Parsing Process
+#### Parsing Process
 1. Read CFG file
 2. Parse grammar rules
 3. Generate corresponding syntax analysis code
