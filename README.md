@@ -1,26 +1,20 @@
 # C Language Compiler: Lexical and Syntax Analysis
 
 ## Project Overview
-A comprehensive Java-based compiler project focusing on lexical and syntax analysis phases for the C programming language.
+C-compiler project focusing on lexical and syntax analysis implemented using C++
 
 ## Technical Features
-- 🔍 Advanced lexical analyzer (lexer)
+- 🔍 Lexical analyzer (lexer)
 - 🌳 Syntax parser with parse tree generation
-- 📊 Comprehensive symbol table implementation
+- 📊 Symbol table implementation
 
-## Key Components
-- **Language**: Java
-- **Phases**: Lexical and Syntax Analysis
-- **Team Size**: 5 students
 
 ## Supported Language Constructs
 - Keywords and identifiers
 - Data types
-- Functions and function calls
 - Statements:
   - Assignment
   - Declaration
-  - Return
   - Iterative
   - Conditional
 - Expressions (Arithmetic and Boolean)
@@ -28,11 +22,28 @@ A comprehensive Java-based compiler project focusing on lexical and syntax analy
 ## Project Highlights
 - Systematic C language source code parsing
 - Token recognition and classification
-- Grammar rule validation
-- Syntax error detection mechanism
+- Syntax error detection
 
-## Technical Skills Demonstrated
-- Compiler design principles
-- Advanced Java programming
-- Code structure analysis
-- Token parsing techniques
+
+
+
+## Grammar Parsing Mechanism
+
+### CFG-Driven Parser Generation
+- Parses the Context-Free Grammar (CFG) file dynamically
+- Generates parsing rules and syntax analysis code programmatically
+- Converts grammar specification into executable parsing logic
+
+### Key Implementation Features
+- Automatic rule extraction from CFG file
+- Dynamic parser construction
+- Flexible grammar modification support
+
+### Parsing Process
+1. Read CFG file
+2. Parse grammar rules
+3. Generate corresponding syntax analysis code
+4. Create parse trees based on extracted rules
+
+
+
